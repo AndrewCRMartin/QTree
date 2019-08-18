@@ -1,0 +1,7 @@
+Fade command (fade out rapidly behind a specified atom)
+Limit command (limit following colour specifications to limit zone)
+CNOS colouring command
+Colours by name
+HBonds
+Text!
+

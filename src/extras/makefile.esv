@@ -1,0 +1,19 @@
+OFILES = qtree.o graphics.o commands.o 
+COPT   = -systype sysv -I/home/dok423/inc -L/home/dok423/libesv
+
+all : qtree worms BallStick
+
+
+qtree :  $(OFILES) 
+	cc $(COPT) -o qtree $(OFILES) -lbiop -lgen -lm -lbsd
+
+worms :  worms.o 
+	cc $(COPT) -o worms worms.o -lbiop -lgen -lm -lbsd
+
+BallStick : BallStick.o 
+	cc $(COPT) -o BallStick BallStick.o -lbiop -lgen -lm -lbsd
+
+.c.o  :
+	cc $(COPT) -o $@ -c $<
+   
+   

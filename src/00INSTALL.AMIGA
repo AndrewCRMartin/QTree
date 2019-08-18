@@ -1,0 +1,34 @@
+
+Installation is very simple.
+
+1) Select the set of executables (qtree, ballstick and worms)
+   you require. If you are using the maths co-processor versions
+   (which have the extension .68881), you should first rename
+   these without the extension.
+   Place these somewhere in your path.
+
+2) If you wish to use the help facility of QTree, you should
+   have qtree.hlp in your current directory, or in a directory
+   with the logical name HELPDIR:
+
+3) Read the file 00Read.Me for some basic information, then do 
+      qtree -h
+   to get further information.
+
+
+
+Output from the program is in MTV raytracer format. This is 
+supported by a number of programs including HAMLab (and the demo
+version on the Fish Disk 726) and the Wasp file converter 
+(Fish 716). These can be used to convert to IFF files.
+
+Also provided in this distribution is DISPMTV which displays MTV
+files directly on the Retina graphics card.
+
+N.B. The default output size is a 512x512 image on an 800x600
+background. Unless you have a very fast Amiga, this will take
+several minutes to render. You should probably use the flags
+   -r 128 -s 128 128
+to create a small version of the image when experimenting.
+
+

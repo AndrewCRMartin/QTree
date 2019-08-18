@@ -1,0 +1,4 @@
+highlight L24 L34 1.0 1.0 1.0
+highlight L50 L56 0.0 1.0 0.0
+zone L24 L34 1.0 1.0 0.0
+zone L50 L56 0.0 1.0 1.0
