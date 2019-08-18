@@ -3,11 +3,11 @@
    Program:    CPK
    File:       cpk.c
    
-   Version:    V2.3
-   Date:       18.10.07
+   Version:    V2.4
+   Date:       27.01.15
    Function:   Size pre-processor for QTree to create CPK images
    
-   Copyright:  (c) SciTech Software 1995-2007
+   Copyright:  (c) SciTech Software 1995-2015
    Author:     Dr. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
@@ -58,6 +58,7 @@
    V2.1  23.10.95 Cosmetic
    V2.2  14.10.03 Skipped
    V2.3  18.10.07 Skipped
+   V2.4  27.01.15 Skipped
 
 *************************************************************************/
 /* Includes
@@ -93,7 +94,7 @@ void Usage(void);
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: CPK V2.3 - SciTech Software, 1995-2007";
+   *sVers="\0$VER: CPK V2.4 - SciTech Software, 1995-2015";
 #endif
 
 /************************************************************************/
@@ -145,13 +146,14 @@ int main(int argc, char **argv)
    23.10.95 V2.1
    14.10.03 V2.2
    18.10.07 V2.3
+   27.01.15 V2.4
 */
 void Banner(void)
 {
-   fprintf(stderr,"\nCPK V2.3\n");
+   fprintf(stderr,"\nCPK V2.4\n");
    fprintf(stderr,"========\n");
    fprintf(stderr,"CPK preprocessor for QTree. SciTech Software\n");
-   fprintf(stderr,"Copyright (C) 1995-2007 SciTech Software. All Rights \
+   fprintf(stderr,"Copyright (C) 1995-2015 SciTech Software. All Rights \
 Reserved.\n");
    fprintf(stderr,"This program is freely distributable providing no \
 profit is made in so doing.\n\n");
@@ -268,10 +270,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    23.10.95 V2.1; Changed `Work' to `Operate'
    14.10.03 V2.2
    18.10.07 V2.3
+   27.01.15 V2.4
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nCPK V2.3 (c) 1995-2007, SciTech Software\n\n");
+   fprintf(stderr,"\nCPK V2.4 (c) 1995-2015, SciTech Software\n\n");
 
    fprintf(stderr,"Usage: cpk [-q] [in.pdb [out.pdb]]\n");
    fprintf(stderr,"       -q Operate quietly\n\n");

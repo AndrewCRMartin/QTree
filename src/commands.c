@@ -3,11 +3,11 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V2.3
-   Date:       18.10.07
+   Version:    V2.4
+   Date:       27.01.15
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993-2007
+   Copyright:  (c) SciTech Software 1993-2015
    Author:     Dr. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
@@ -80,6 +80,7 @@
    V2.1c 18.06.96 Changed InZone() to InPDBZone() and moved to bioplib
    V2.2  14.10.03 Added BOUNDS and RADIUS commands
    V2.3  18.10.07 Added HIGHLIGHT command
+   V2.4  27.01.15 Modifications for new version of BiopLib
 
 *************************************************************************/
 /* Includes
@@ -514,14 +515,15 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
             appropriate zone occurs in two parts
    18.06.96 Changed InZone() to InPDBZone()
    18.10.07 Added type parameter
+   27.01.15 Updated for new bioplib
 */
 void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
             char *end, char *red, char *green, char *blue, 
             int highlight)
 {
-   char     chain1,  chain2,
-            insert1, insert2;
-   int      resnum1, resnum2,
+   char     chain1[8],  chain2[8],
+            insert1[8], insert2[8];
+   int      resnum1,    resnum2,
             i;
    PDB      *p;
    double   r, g, b;
@@ -530,14 +532,14 @@ void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start,
    sscanf(green, "%lf",&g);
    sscanf(blue,  "%lf",&b);
    
-   ParseResSpec(start, &chain1, &resnum1, &insert1);
-   ParseResSpec(end,   &chain2, &resnum2, &insert2);
+   ParseResSpec(start, chain1, &resnum1, insert1);
+   ParseResSpec(end,   chain2, &resnum2, insert2);
    
-   if(chain1 != chain2) return;
+   if(!CHAINMATCH(chain1,chain2)) return;
    
    for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
    {
-      if(InPDBZone(p, chain1, resnum1, insert1, resnum2, insert2))
+      if(InPDBZone(p, chain1[0], resnum1, insert1[0], resnum2, insert2[0]))
       {
          if(highlight)
          {
@@ -627,17 +629,18 @@ void DoRotate(PDB *pdb, char *direction, char *amount)
    23.07.93 Original    By: ACRM
    28.03.94 Added warning if atom not found
    23.10.95 Warnings go to stderr
+   27.01.15 Updated for new bioplib
 */
 void DoCentre(PDB *pdb, char *resspec, char *atom)
 {
-   char  chain,
-         insert;
+   char  chain[8],
+         insert[8];
    int   resnum;
    PDB   *p;
    BOOL  found = FALSE;
    
    /* Parse the residue specification                                   */
-   ParseResSpec(resspec, &chain, &resnum, &insert);
+   ParseResSpec(resspec, chain, &resnum, insert);
    
    /* Tidy up atom specification                                        */
    UPPER(atom);
@@ -648,8 +651,8 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
    {
       /* Check we are in the correct residue                            */
       if(p->resnum    == resnum &&
-         p->insert[0] == insert &&
-         p->chain[0]  == chain)
+         CHAINMATCH(p->insert, insert) &&
+         CHAINMATCH(p->chain, chain))
       {
          /* Residue found; set flag                                     */
          found = TRUE;
@@ -715,17 +718,18 @@ void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
    28.03.94 Changed check on atom name to use strncmp()
             Added warning if not found.
    23.10.95 Warnings go to stderr
+   27.01.15 Updated for new bioplib
 */
 void DoSlab(PDB *pdb, char *resspec, char *atom)
 {
-   char  chain,
-         insert;
+   char  chain[8],
+         insert[8];
    int   resnum;
    PDB   *p;
    BOOL  found = FALSE;
    
    /* Parse the residue specification                                   */
-   ParseResSpec(resspec, &chain, &resnum, &insert);
+   ParseResSpec(resspec, chain, &resnum, insert);
    
    /* Tidy up atom specification                                        */
    UPPER(atom);
@@ -736,8 +740,8 @@ void DoSlab(PDB *pdb, char *resspec, char *atom)
    {
       /* Check we are in the correct residue                            */
       if(p->resnum    == resnum &&
-         p->insert[0] == insert &&
-         p->chain[0]  == chain)
+         CHAINMATCH(p->insert, insert) &&
+         CHAINMATCH(p->chain, chain))
       {
          /* Residue found; set flag                                     */
          found = TRUE;
@@ -870,6 +874,7 @@ void HSL2RGB(REAL hue, REAL saturation, REAL luminance,
    Set colours of spheres based on chain name.
    
    06.12.95 Original    By: ACRM
+   27.01.15 Updated for new bioplib
 */
 void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain, 
              char *red, char *green, char *blue)
@@ -882,11 +887,13 @@ void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain,
    sscanf(green, "%lf",&g);
    sscanf(blue,  "%lf",&b);
 
+#ifdef DO_UPPER
    UPPER(chain);
+#endif 
 
    for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
    {
-      if(p->chain[0] == chain[0])
+      if(CHAINMATCH(p->chain, chain))
       {
          spheres[i].r   = r;
          spheres[i].g   = g;

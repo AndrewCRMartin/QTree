@@ -3,11 +3,11 @@
    Program:    QTree
    File:       graphics.c
    
-   Version:    V2.3
-   Date:       18.10.07
+   Version:    V2.4
+   Date:       27.01.15
    Function:   Display routines for QTree
    
-   Copyright:  (c) SciTech Software 1993-2007
+   Copyright:  (c) SciTech Software 1993-2015
    Author:     Dr. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
@@ -74,6 +74,7 @@
    V2.1  23.10.95 Skipped
    V2.2  14.10.03 Skipped
    V2.3  18.10.03 Skipped
+   V2.4  27.01.15 Skipped
 
 *************************************************************************/
 /* Includes

@@ -3,11 +3,11 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V2.3
-   Date:       18.10.07
+   Version:    V2.4
+   Date:       27.01.15
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993-2007
+   Copyright:  (c) SciTech Software 1993-2015
    Author:     Dr. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
@@ -79,6 +79,7 @@
    V2.2  14.10.03 Changed for new PDB structure
    V2.2a 18.10.07 Changed %lf to %f in printf calls
    V2.3  18.10.07 Added highlight stuff
+   V2.4  27.01.15 Changed to use CHAINMATCH() macro
 
 *************************************************************************/
 /* Includes
@@ -105,7 +106,7 @@ static int sTotalCAlpha = 0;
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: Worms V2.3  SciTech Software, 1993-2007";
+   *sVers="\0$VER: Worms V2.4  SciTech Software, 1993-2015";
 #endif
 
 /************************************************************************/
@@ -142,6 +143,7 @@ void Usage(void);
    23.10.95 V2.1
    14.10.03 V2.2
    18.10.07 V2.3
+   27.01.15 V2.4
 */
 int main(int argc, char **argv)
 {
@@ -170,11 +172,11 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nWorms V2.3\n");
+            fprintf(stderr,"\nWorms V2.4\n");
             fprintf(stderr,"==========\n");
             fprintf(stderr,"Worms program for use with QTree. SciTech \
 Software\n");
-            fprintf(stderr,"Copyright (C) 1993-2007 SciTech Software. \
+            fprintf(stderr,"Copyright (C) 1993-2015 SciTech Software. \
 All Rights Reserved.\n");
             fprintf(stderr,"This program is freely distributable \
 providing no profit is made in so doing.\n\n");
@@ -427,6 +429,7 @@ PDB *InterpPDB(PDB *spline, int nsmooth, int NDivide, int *nworm)
    23.07.93 Original    By: ACRM
    07.10.93 Now returns NULL if no new chain found (as it should
             have all along)
+   27.01.15 Updated to use CHAINMATCH()
 */
 PDB *FindChainPDB(PDB *pdb)
 {
@@ -455,8 +458,8 @@ PDB *FindChainPDB(PDB *pdb)
                for(q=pdb; q!=NULL; NEXT(q))
                {
                   if(p->resnum    == q->resnum  &&
-                     p->chain[0]  == q->chain[0] &&
-                     p->insert[0] == q->insert[0])
+                     CHAINMATCH(p->chain, q->chain) &&
+                     CHAINMATCH(p->insert, q->insert))
                      return(q);
                }
                return(p);
@@ -933,10 +936,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    23.10.95 V2.1
    14.10.03 V2.2
    18.10.07 V2.3
+   27.01.15 V2.4
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nWorms V2.3 (c) 1993-2007 Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\nWorms V2.4 (c) 1993-2015 Dr. Andrew C.R. Martin, \
 SciTech Software\n\n");
    fprintf(stderr,"Usage: worms [-q] [-n <n>] [-d] [-s <n>] [<in.pdb> \
 [<out.pdb>]]\n");

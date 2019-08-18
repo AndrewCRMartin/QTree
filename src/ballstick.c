@@ -3,11 +3,11 @@
    Program:    BallStick
    File:       BallStick.c
    
-   Version:    V2.3
-   Date:       18.10.07
+   Version:    V2.4
+   Date:       27.01.15
    Function:   Preprocessor for QTree to create a Ball & Stick image
    
-   Copyright:  (c) SciTech Software 1993-2007
+   Copyright:  (c) SciTech Software 1993-2015
    Author:     Dr. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
@@ -81,6 +81,7 @@
    V2.2  14.10.03 Skipped
    V2.2  14.10.03 Changed for new PDB structure
    V2.3  18.10.07 Skipped
+   V2.4  27.01.15 Updated for new bioplib
 
 *************************************************************************/
 /* Includes
@@ -109,7 +110,7 @@ static BOOL gMaxSpecified = FALSE;
 
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: BallStick V2.3 - SciTech Software, \
+static unsigned char *sVers="\0$VER: BallStick V2.4 - SciTech Software, \
 1993-2007";
 #endif
 
@@ -140,6 +141,7 @@ void UsageExit(void);
    30.06.98 V2.1c
    14.10.03 V2.2
    18.10.07 V2.3
+   27.01.15 V2.4
 */
 int main(int argc, char **argv)
 {
@@ -165,11 +167,11 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nBallStick V2.3\n");
+            fprintf(stderr,"\nBallStick V2.4\n");
             fprintf(stderr,"==============\n");
             fprintf(stderr,"Ball and Stick program for use with QTree. \
 SciTech Software\n");
-            fprintf(stderr,"Copyright (C) 1993-2007 SciTech Software. \
+            fprintf(stderr,"Copyright (C) 1993-2015 SciTech Software. \
 All Rights Reserved.\n");
             fprintf(stderr,"This program is freely distributable \
 providing no profit is made in so doing.\n\n");
@@ -226,6 +228,7 @@ providing no profit is made in so doing.\n\n");
    29.07.93 Added disulphide support
    04.10.94 Stores in occ rather than Bval
    18.09.97 Max bond length in gMaxBondSq rather than hard coded
+   27.01.15 Uses CHAINMATCH()
 */
 long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
                      BOOL Disulphides)
@@ -288,7 +291,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
       {
          for(q=p->next; q!=NULL; NEXT(q))
          {
-            if(p->chain[0] != q->chain[0]) break;
+            if(!CHAINMATCH(p->chain, q->chain)) break;
             
             if(!strncmp(q->atnam,"N   ",4) || 
                !strncmp(q->atnam,"P   ",4))
@@ -519,10 +522,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    30.06.98 V2.1c -m now also applies to between residue links
    14.10.03 V2.2
    18.10.07 V2.3
+   27.01.15 V2.4
 */
 void UsageExit(void)
 {
-   fprintf(stderr,"\nBallStick V2.3 (c) 1993-2007 Dr. Andrew C.R. \
+   fprintf(stderr,"\nBallStick V2.4 (c) 1993-2015 Dr. Andrew C.R. \
 Martin, SciTech Software\n\n");
    
    fprintf(stderr,"Usage: BallStick [-q] [-n <n>] [-b <r>] [-s <r>] [-d] \
