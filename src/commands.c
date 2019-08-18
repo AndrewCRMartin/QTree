@@ -3,18 +3,12 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V2.2
-   Date:       14.10.03
+   Version:    V2.3
+   Date:       18.10.07
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993-2003
+   Copyright:  (c) SciTech Software 1993-2007
    Author:     Dr. Andrew C. R. Martin
-   Address:    SciTech Software
-               23, Stag Leys,
-               Ashtead,
-               Surrey,
-               KT21 2TD.
-   Phone:      +44 (0) 1372 275775
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -85,6 +79,7 @@
                   insertion codes
    V2.1c 18.06.96 Changed InZone() to InPDBZone() and moved to bioplib
    V2.2  14.10.03 Added BOUNDS and RADIUS commands
+   V2.3  18.10.07 Added HIGHLIGHT command
 
 *************************************************************************/
 /* Includes
@@ -140,7 +135,9 @@
 #define COM_CHAIN             19
 #define COM_BOUNDS            20
 #define COM_RADIUS            21
-#define PARSER_NCOMM          22
+#define COM_HIGHLIGHT         22
+#define COM_BORDERWIDTH       23
+#define PARSER_NCOMM          24
 
 /************************************************************************/
 KeyWd sKeyWords[PARSER_NCOMM];         /* Parser keywords               */
@@ -160,6 +157,7 @@ REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
    24.06.94 Added TEMPERATURE
    06.12.95 Added CHAIN
    14.10.03 Added BOUNDS and RADIUS
+   18.10.07 Added HIGHLIGHT
 */
 BOOL SetupParser(void)
 {
@@ -180,28 +178,30 @@ BOOL SetupParser(void)
    }
    
    /* Set up the keywords                                               */
-   MAKEKEY(sKeyWords[COM_ZONE],     "ZONE",        STRING,5);
-   MAKEKEY(sKeyWords[COM_ATOM],     "ATOM",        STRING,4);
-   MAKEKEY(sKeyWords[COM_RESIDUE],  "RESIDUE",     STRING,4);
-   MAKEKEY(sKeyWords[COM_DEFAULT],  "DEFAULT",     NUMBER,3);
-   MAKEKEY(sKeyWords[COM_AMBIENT],  "AMBIENT",     NUMBER,1);
-   MAKEKEY(sKeyWords[COM_SPEC],     "SPECULAR",    NUMBER,0);
-   MAKEKEY(sKeyWords[COM_CONTRAST], "CONTRAST",    NUMBER,1);
-   MAKEKEY(sKeyWords[COM_PHONG],    "PHONG",       NUMBER,2);
-   MAKEKEY(sKeyWords[COM_SCALE],    "SCALE",       NUMBER,1);
-   MAKEKEY(sKeyWords[COM_ROTATE],   "ROTATE",      STRING,2);
-   MAKEKEY(sKeyWords[COM_MATRIX],   "MATRIX",      NUMBER,9);
-   MAKEKEY(sKeyWords[COM_CENTRE],   "CENTRE",      STRING,2);
-   MAKEKEY(sKeyWords[COM_CENTER],   "CENTER",      STRING,2);
-   MAKEKEY(sKeyWords[COM_XMATRIX],  "XMATRIX",     NUMBER,9);
-   MAKEKEY(sKeyWords[COM_LIGHT],    "LIGHT",       NUMBER,3);
-   MAKEKEY(sKeyWords[COM_BACKGRND], "BACKGROUND",  NUMBER,6);
-   MAKEKEY(sKeyWords[COM_SPHSCALE], "SPHERESCALE", NUMBER,1);
-   MAKEKEY(sKeyWords[COM_SLAB],     "SLAB",        STRING,3);
-   MAKEKEY(sKeyWords[COM_TEMP],     "TEMPERATURE", NUMBER,0);
-   MAKEKEY(sKeyWords[COM_CHAIN],    "CHAIN",       STRING,4);
-   MAKEKEY(sKeyWords[COM_BOUNDS],   "BOUNDS",      NUMBER,6);
-   MAKEKEY(sKeyWords[COM_RADIUS],   "RADIUS",      STRING,2);
+   MAKEKEY(sKeyWords[COM_ZONE],       "ZONE",        STRING,5);
+   MAKEKEY(sKeyWords[COM_ATOM],       "ATOM",        STRING,4);
+   MAKEKEY(sKeyWords[COM_RESIDUE],    "RESIDUE",     STRING,4);
+   MAKEKEY(sKeyWords[COM_DEFAULT],    "DEFAULT",     NUMBER,3);
+   MAKEKEY(sKeyWords[COM_AMBIENT],    "AMBIENT",     NUMBER,1);
+   MAKEKEY(sKeyWords[COM_SPEC],       "SPECULAR",    NUMBER,0);
+   MAKEKEY(sKeyWords[COM_CONTRAST],   "CONTRAST",    NUMBER,1);
+   MAKEKEY(sKeyWords[COM_PHONG],      "PHONG",       NUMBER,2);
+   MAKEKEY(sKeyWords[COM_SCALE],      "SCALE",       NUMBER,1);
+   MAKEKEY(sKeyWords[COM_ROTATE],     "ROTATE",      STRING,2);
+   MAKEKEY(sKeyWords[COM_MATRIX],     "MATRIX",      NUMBER,9);
+   MAKEKEY(sKeyWords[COM_CENTRE],     "CENTRE",      STRING,2);
+   MAKEKEY(sKeyWords[COM_CENTER],     "CENTER",      STRING,2);
+   MAKEKEY(sKeyWords[COM_XMATRIX],    "XMATRIX",     NUMBER,9);
+   MAKEKEY(sKeyWords[COM_LIGHT],      "LIGHT",       NUMBER,3);
+   MAKEKEY(sKeyWords[COM_BACKGRND],   "BACKGROUND",  NUMBER,6);
+   MAKEKEY(sKeyWords[COM_SPHSCALE],   "SPHERESCALE", NUMBER,1);
+   MAKEKEY(sKeyWords[COM_SLAB],       "SLAB",        STRING,3);
+   MAKEKEY(sKeyWords[COM_TEMP],       "TEMPERATURE", NUMBER,0);
+   MAKEKEY(sKeyWords[COM_CHAIN],      "CHAIN",       STRING,4);
+   MAKEKEY(sKeyWords[COM_BOUNDS],     "BOUNDS",      NUMBER,6);
+   MAKEKEY(sKeyWords[COM_RADIUS],     "RADIUS",      STRING,2);
+   MAKEKEY(sKeyWords[COM_HIGHLIGHT],  "HIGHLIGHT",   STRING,5);
+   MAKEKEY(sKeyWords[COM_BORDERWIDTH],"BORDERWIDTH", NUMBER,1);
    
    /* Check all allocations OK                                          */
    for(i=0; i<PARSER_NCOMM; i++)
@@ -233,6 +233,7 @@ BOOL SetupParser(void)
    23.10.95 Changed error messages to go to stderr
    06.12.95 Added CHAIN
    14.10.03 Added BOUNDS and RADIUS
+   18.10.07 Added HIGHLIGHT
 */
 void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                    BOOL ReportError)
@@ -244,7 +245,8 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
          SlabRes[16],
          SlabAtom[8];
    int   key,
-         i, j;
+         i, j,
+         nhighlight = 0;
    REAL  DefaultRGB[3],
          matrix[3][3];
    BOOL  SetDefault   = FALSE,
@@ -254,7 +256,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
    /* Default spheres to white                                          */
    for(i=0; i<3; i++)
       DefaultRGB[i] = 1.0;
-   
+
    if(SetupParser())
    {
       if((fp=fopen(file,"r")) == NULL)
@@ -279,7 +281,8 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
             break;
          case COM_ZONE:
             DoZone(spheres,pdb,NSphere,sStrParam[0],sStrParam[1],
-                           sStrParam[2],sStrParam[3],sStrParam[4]);
+                           sStrParam[2],sStrParam[3],sStrParam[4],
+                           0);
             SetDefault = TRUE;
             break;
          case COM_ATOM:
@@ -381,6 +384,20 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
             break;
          case COM_RADIUS:
             DoRadius(sStrParam[0], sStrParam[1]);
+            break;
+         case COM_HIGHLIGHT:
+            nhighlight++;
+            DoZone(spheres, pdb, NSphere, sStrParam[0],sStrParam[1], 
+                   sStrParam[2], sStrParam[3], sStrParam[4], 
+                   nhighlight);
+            break;
+         case COM_BORDERWIDTH:
+            gBorderWidth = (int)sRealParam[0];
+            gBorderWidth--;
+            if(gBorderWidth<0)
+            {
+               gBorderWidth = 0;
+            }
             break;
          default:
             break;
@@ -487,7 +504,8 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
 
 /************************************************************************/
 /*>void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
-               char *end, char *red, char *green, char *blue)
+               char *end, char *red, char *green, char *blue, 
+               int highlight)
    ----------------------------------------------------------------
    Set colours of spheres based on zone information.
    
@@ -495,9 +513,11 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
    29.03.95 Modified to work correctly with b&s images where the 
             appropriate zone occurs in two parts
    18.06.96 Changed InZone() to InPDBZone()
+   18.10.07 Added type parameter
 */
 void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
-            char *end, char *red, char *green, char *blue)
+            char *end, char *red, char *green, char *blue, 
+            int highlight)
 {
    char     chain1,  chain2,
             insert1, insert2;
@@ -519,10 +539,20 @@ void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start,
    {
       if(InPDBZone(p, chain1, resnum1, insert1, resnum2, insert2))
       {
-         spheres[i].r   = r;
-         spheres[i].g   = g;
-         spheres[i].b   = b;
-         spheres[i].set = TRUE;
+         if(highlight)
+         {
+            spheres[i].hr   = r;
+            spheres[i].hg   = g;
+            spheres[i].hb   = b;
+            spheres[i].highlight = highlight;
+         }
+         else
+         {
+            spheres[i].r   = r;
+            spheres[i].g   = g;
+            spheres[i].b   = b;
+            spheres[i].set = TRUE;
+         }
       }
    }
 }
@@ -867,66 +897,6 @@ void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain,
 }
 
 /************************************************************************/
-/*>void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
-               char *red, char *green, char *blue)
-   ---------------------------------------------------------------
-   Set colours of spheres based on atom information. Handles * as wild
-   card and ' is translated to a * for use in PDB files
-   
-   21.07.93 Original    By: ACRM
-   22.07.93 Padded atom name to 4 chars
-*/
-void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
-            char *red, char *green, char *blue)
-{
-   int      i,
-            NComp = 4;  /* Normally compare all 4 chars of atom name    */
-   PDB      *p;
-   char     *ptr;
-   double   r, g, b;
-   
-   sscanf(red,   "%lf",&r);
-   sscanf(green, "%lf",&g);
-   sscanf(blue,  "%lf",&b);
-   
-   UPPER(atom);
-   
-   /* See if there is a wild card in the atom spec                      */
-   if((ptr = strchr(atom,'*')) != NULL)
-   {
-      *ptr = '\0';
-      NComp = strlen(atom);   /* Compare fewer characters               */
-      
-      if(NComp == 0) NComp = 4;
-   }
-   else
-   {
-      /* No *, pad atom to 4 chars. N.B. We assume atom is large enough
-         to handle this!
-      */
-      padterm(atom,4);
-   }
-   
-   /* Change a ' to a * for comparison                                  */
-   if((ptr = strchr(atom,'\'')) != NULL)
-   {
-      *ptr = '*';
-   }
-   
-   for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
-   {
-      if(!strncmp(p->atnam,atom,NComp))
-      {
-         spheres[i].r   = r;
-         spheres[i].g   = g;
-         spheres[i].b   = b;
-         spheres[i].set = TRUE;
-      }
-   }
-}
-
-
-/************************************************************************/
 /*>void DoRadius(char *atomspec, char *radius_str)
    -----------------------------------------------
    Input:   char    *atomspec      Atom specification
@@ -1002,6 +972,63 @@ radius: %s (ignored)\n", radius_str);
    }
 }
 
-            
-            
-            
+/************************************************************************/
+/*>void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
+               char *red, char *green, char *blue)
+   ---------------------------------------------------------------
+   Set colours of spheres based on atom information. Handles * as wild
+   card and ' is translated to a * for use in PDB files
+   
+   21.07.93 Original    By: ACRM
+   22.07.93 Padded atom name to 4 chars
+*/
+void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
+            char *red, char *green, char *blue)
+{
+   int      i,
+            NComp = 4;  /* Normally compare all 4 chars of atom name    */
+   PDB      *p;
+   char     *ptr;
+   double   r, g, b;
+   
+   sscanf(red,   "%lf",&r);
+   sscanf(green, "%lf",&g);
+   sscanf(blue,  "%lf",&b);
+   
+   UPPER(atom);
+   
+   /* See if there is a wild card in the atom spec                      */
+   if((ptr = strchr(atom,'*')) != NULL)
+   {
+      *ptr = '\0';
+      NComp = strlen(atom);   /* Compare fewer characters               */
+      
+      if(NComp == 0) NComp = 4;
+   }
+   else
+   {
+      /* No *, pad atom to 4 chars. N.B. We assume atom is large enough
+         to handle this!
+      */
+      padterm(atom,4);
+   }
+   
+   /* Change a ' to a * for comparison                                  */
+   if((ptr = strchr(atom,'\'')) != NULL)
+   {
+      *ptr = '*';
+   }
+   
+   for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
+   {
+      if(!strncmp(p->atnam,atom,NComp))
+      {
+         spheres[i].r   = r;
+         spheres[i].g   = g;
+         spheres[i].b   = b;
+         spheres[i].set = TRUE;
+      }
+   }
+}
+
+

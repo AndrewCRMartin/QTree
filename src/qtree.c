@@ -3,7 +3,7 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V2.2a
+   Version:    V2.3
    Date:       18.10.07
    Function:   Use quad-tree algorithm to display a molecule
    
@@ -98,6 +98,7 @@
    V2.1c 18.06.96 Moved InZone() into bioplib as InPDBZone()
    V2.2  14.10.03 Added BOUNDS and RADIUS
    V2.2a 18.10.07 Some cleanup for ANSI C
+   V2.3  18.10.07 Added HIGHLIGHT
 
 *************************************************************************/
 /* Includes
@@ -152,7 +153,7 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: QTree V2.2a - SciTech Software, 1993-2007";
+   *sVers="\0$VER: QTree V2.3 - SciTech Software, 1993-2007";
 #endif
 
 
@@ -274,8 +275,8 @@ int main(int argc, char **argv)
       /* Banner message                                                 */
       if(!Quiet)
       {
-         fprintf(stderr,"\nQTree V2.2a\n");
-         fprintf(stderr,"=========== \n");
+         fprintf(stderr,"\nQTree V2.3\n");
+         fprintf(stderr,"========== \n");
          fprintf(stderr,"CPK program for PDB files. SciTech Software\n");
          fprintf(stderr,"Copyright (C) 1993-2007 SciTech Software. All \
 Rights Reserved.\n");
@@ -573,6 +574,7 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
             Corrected centering. Proper radii.
             Added depth cue handling
    22.07.93 Separated out MapSpheres()
+   17.10.07 Sets .highlight
 */
 SPHERE *CreateSphereList(PDB *pdb, int NAtom)
 {
@@ -586,6 +588,7 @@ SPHERE *CreateSphereList(PDB *pdb, int NAtom)
       for(p=pdb,NSphere=0; p!=NULL; NEXT(p), NSphere++)
       {
          sp[NSphere].set         = FALSE;
+         sp[NSphere].highlight   = 0;
          
          switch(p->atnam[0])
          {
@@ -720,7 +723,7 @@ void SplitPic(int x0, int y0, int x1, int y1, SPHERE **spheres,
    /* Check for remaining pixel to be coloured                          */
    if(x1-x0 == 1 && y1-y0 == 1)
    {
-      ColourPixel((REAL)x0, (REAL)y0, spheres, NSphere);
+      ColourPixel(x0, y0, spheres, NSphere);
    }
    else
    {
@@ -933,7 +936,7 @@ SPHERE **SortSpheresOnX(SPHERE *AllSpheres, int NSphere)
 
 
 /************************************************************************/
-/*>void ColourPixel(REAL x, REAL y, SPHERE **spheres, int NSphere)
+/*>void ColourPixel(int x, int y, SPHERE **spheres, int NSphere)
    ---------------------------------------------------------------
    Search through the sphere list for this pixel to identify the 
    front-most sphere. When found, call the shading routine.
@@ -943,16 +946,80 @@ SPHERE **SortSpheresOnX(SPHERE *AllSpheres, int NSphere)
             5 centre points.
    21.07.93 Made x and y real
    23.07.93 Removed the Z sorting; always run through the whole list.
+   18.10.07 Made x and y ints the cast them inside here
 */
-void ColourPixel(REAL x, REAL y, SPHERE **spheres, int NSphere)
+void ColourPixel(int xi, int yi, SPHERE **spheres, int NSphere)
+{
+   REAL           x, y,
+                  MaxZ,
+                  junk;
+   int            FrontSphere = (-1),
+                  sph,
+                  xx, yy;
+   BOOL           border;
+
+   /* Cast x and y as REALs                                             */
+   x = (REAL)xi;
+   y = (REAL)yi;
+
+   FrontSphere = FindSphere(x, y, spheres, NSphere, &MaxZ);
+   
+   /* Shade the pixel                                                   */
+   if(FrontSphere != (-1))
+   {
+      if(spheres[FrontSphere]->highlight)
+      {
+         border = FALSE;
+         for(xx = xi-BORDER_NEIGHBOUR; xx <= xi+BORDER_NEIGHBOUR; xx++)
+         {
+            for(yy = yi-BORDER_NEIGHBOUR; yy <= yi+BORDER_NEIGHBOUR; yy++)
+            {
+               sph = FindSphere((REAL)xx, (REAL)yy,
+                                   spheres, NSphere, &junk);
+               if((sph==(-1)) ||
+                  (spheres[sph]->highlight != 
+                   spheres[FrontSphere]->highlight))
+               {
+                  border = TRUE;
+                  xx = xi+BORDER_NEIGHBOUR+BORDER_NEIGHBOUR;
+                  break;
+               }
+            }
+         }
+         if(border)
+         {
+            for(xx = xi-gBorderWidth; xx <= xi; xx++)
+            {
+               for(yy = yi-gBorderWidth; yy <= yi; yy++)
+               {
+                  SetPixel(xx, yy, 
+                           spheres[FrontSphere]->hr,
+                           spheres[FrontSphere]->hg,
+                           spheres[FrontSphere]->hb);
+               }
+            }
+         }
+         else
+         {
+            ShadePixel(x, y, MaxZ, spheres[FrontSphere]);
+         }
+      }
+      else
+      {
+         ShadePixel(x, y, MaxZ, spheres[FrontSphere]);
+      }
+   }
+}
+
+/************************************************************************/
+int FindSphere(REAL x, REAL y, SPHERE **spheres, int NSphere, REAL *MaxZ)
 {
    REAL           XOff,
-                  YOff,
-                  MaxZ;
+                  YOff;
    register REAL  q, z;
    int            i,
                   FrontSphere = (-1);
-   
+
    /* Search back through the spheres for the nearest z position at this
       pixel.
    */
@@ -972,26 +1039,21 @@ void ColourPixel(REAL x, REAL y, SPHERE **spheres, int NSphere)
          
          if(FrontSphere == (-1))
          {
-            MaxZ = z;
+            *MaxZ = z;
             FrontSphere = i;
          }
          else
          {
-            if(z > MaxZ)
+            if(z > *MaxZ)
             {
-               MaxZ = z;
+               *MaxZ = z;
                FrontSphere = i;
             }
          }
       }
-          
    }
-   
-   /* Shade the pixel                                                   */
-   if(FrontSphere != (-1))
-      ShadePixel(x, y, (REAL)MaxZ, spheres[FrontSphere]);
-}
-
+   return(FrontSphere);
+}   
 
 /************************************************************************/
 /*>int FarLeftSearch(SPHERE **spheres, int NSphere, REAL x)
@@ -1402,6 +1464,7 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.06.96 V2.1c
    14.10.03 V2.2
    18.10.07 V2.2a
+   18.10.07 V2.3
 */
 void UsageExit(BOOL ShowHelp)
 {
@@ -1412,7 +1475,7 @@ void UsageExit(BOOL ShowHelp)
    }
    else
    {
-      fprintf(stderr,"\nQTree V2.2a (c) 1993-2007 Dr. Andrew C.R. Martin, \
+      fprintf(stderr,"\nQTree V2.3 (c) 1993-2007 Dr. Andrew C.R. Martin, \
 SciTech Software\n\n");
       
       fprintf(stderr,"Usage: qtree [-q] [-b] [-c <control.dat>] [-r <n>] \

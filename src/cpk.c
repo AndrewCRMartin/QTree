@@ -3,18 +3,12 @@
    Program:    CPK
    File:       cpk.c
    
-   Version:    V2.2
-   Date:       14.10.03
+   Version:    V2.3
+   Date:       18.10.07
    Function:   Size pre-processor for QTree to create CPK images
    
-   Copyright:  (c) SciTech Software 1995-2003
+   Copyright:  (c) SciTech Software 1995-2007
    Author:     Dr. Andrew C. R. Martin
-   Address:    SciTech Software
-               23, Stag Leys,
-               Ashtead,
-               Surrey,
-               KT21 2TD.
-   Phone:      +44 (0) 1372 275775
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -63,6 +57,7 @@
    V2.0  28.03.95 Original (numbered to match other programs)
    V2.1  23.10.95 Cosmetic
    V2.2  14.10.03 Skipped
+   V2.3  18.10.07 Skipped
 
 *************************************************************************/
 /* Includes
@@ -98,7 +93,7 @@ void Usage(void);
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: CPK V2.2 - SciTech Software, 1995-2003";
+   *sVers="\0$VER: CPK V2.3 - SciTech Software, 1995-2007";
 #endif
 
 /************************************************************************/
@@ -149,13 +144,14 @@ int main(int argc, char **argv)
    28.03.95 Original    By: ACRM
    23.10.95 V2.1
    14.10.03 V2.2
+   18.10.07 V2.3
 */
 void Banner(void)
 {
-   fprintf(stderr,"\nCPK V2.2\n");
+   fprintf(stderr,"\nCPK V2.3\n");
    fprintf(stderr,"========\n");
    fprintf(stderr,"CPK preprocessor for QTree. SciTech Software\n");
-   fprintf(stderr,"Copyright (C) 1995-2003 SciTech Software. All Rights \
+   fprintf(stderr,"Copyright (C) 1995-2007 SciTech Software. All Rights \
 Reserved.\n");
    fprintf(stderr,"This program is freely distributable providing no \
 profit is made in so doing.\n\n");
@@ -271,10 +267,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    28.03.95 Original    By: ACRM
    23.10.95 V2.1; Changed `Work' to `Operate'
    14.10.03 V2.2
+   18.10.07 V2.3
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nCPK V2.2 (c) 1995-2003, SciTech Software\n\n");
+   fprintf(stderr,"\nCPK V2.3 (c) 1995-2007, SciTech Software\n\n");
 
    fprintf(stderr,"Usage: cpk [-q] [in.pdb [out.pdb]]\n");
    fprintf(stderr,"       -q Operate quietly\n\n");

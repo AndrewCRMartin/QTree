@@ -9,7 +9,7 @@ void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3],
 void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
 ;
 void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
-            char *end, char *red, char *green, char *blue)
+            char *end, char *red, char *green, char *blue, int type)
 ;
 void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam, 
                char *red, char *green, char *blue)
@@ -25,14 +25,11 @@ void DoSlab(PDB *pdb, char *resspec, char *atom)
 void HSL2RGB(REAL hue, REAL saturation, REAL luminance,
              REAL *red, REAL *green, REAL *blue)
 ;
-BOOL InZone(PDB *p, char chain, int resnum1, char insert1, 
-            int resnum2, char insert2)
-;
 void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain, 
              char *red, char *green, char *blue)
 ;
+void DoRadius(char *atomspec, char *radius_str)
+;
 void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
             char *red, char *green, char *blue)
-;
-void DoRadius(char *atomspec, char *radius_str)
 ;

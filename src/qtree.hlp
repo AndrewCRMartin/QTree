@@ -308,3 +308,28 @@
    CA of tyrosine will match the first RADIUS command. To get the
    desired effect, put the specific RADIUS commands first and the
    more general one last.
+#HIGHLIGHT
+
+
+
+   HIGHLIGHT res1 res2 r g b
+
+   Specify a colour for a highlighted border around a zone of
+   residues. This draws a 1-pixel wide border around the residues
+   in the zone. The residue specifications are in the form:
+   
+         cnnni
+         
+   where c is the chain name, nnn is the residue number and i is the 
+   insert letter. Both the chain name and insert letter are optional.
+   
+   r, g and b specify the colour to be used with values between 0.0 and 
+   1.0 being valid for each of the red, green and blue parameters.
+#BORDERWIDTH
+
+
+
+   BORDERWIDTH n
+
+   Specify the width for the border to draw with HIGHLIGHT (default 1).
+   All borders will be drawn in the same width.

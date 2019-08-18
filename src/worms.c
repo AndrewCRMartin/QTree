@@ -3,18 +3,12 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V2.2
-   Date:       14.10.03
+   Version:    V2.3
+   Date:       18.10.07
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993-2003
+   Copyright:  (c) SciTech Software 1993-2007
    Author:     Dr. Andrew C. R. Martin
-   Address:    SciTech Software
-               23, Stag Leys,
-               Ashtead,
-               Surrey,
-               KT21 2TD.
-   Phone:      +44 (0) 1372 275775
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -84,6 +78,7 @@
    V2.1  23.10.95 Skipped
    V2.2  14.10.03 Changed for new PDB structure
    V2.2a 18.10.07 Changed %lf to %f in printf calls
+   V2.3  18.10.07 Added highlight stuff
 
 *************************************************************************/
 /* Includes
@@ -110,7 +105,7 @@ static int sTotalCAlpha = 0;
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: Worms V2.2a  SciTech Software, 1993-2003";
+   *sVers="\0$VER: Worms V2.3  SciTech Software, 1993-2007";
 #endif
 
 /************************************************************************/
@@ -146,7 +141,7 @@ void Usage(void);
    21.12.94 Improved usage message
    23.10.95 V2.1
    14.10.03 V2.2
-   18.10.07 V2.2a
+   18.10.07 V2.3
 */
 int main(int argc, char **argv)
 {
@@ -175,8 +170,8 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nWorms V2.2a\n");
-            fprintf(stderr,"===========\n");
+            fprintf(stderr,"\nWorms V2.3\n");
+            fprintf(stderr,"==========\n");
             fprintf(stderr,"Worms program for use with QTree. SciTech \
 Software\n");
             fprintf(stderr,"Copyright (C) 1993-2007 SciTech Software. \
@@ -937,11 +932,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    28.03.95 Original    By: ACRM
    23.10.95 V2.1
    14.10.03 V2.2
-   18.10.07 V2.2a
+   18.10.07 V2.3
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nWorms V2.2a (c) 1993-2007 Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\nWorms V2.3 (c) 1993-2007 Dr. Andrew C.R. Martin, \
 SciTech Software\n\n");
    fprintf(stderr,"Usage: worms [-q] [-n <n>] [-d] [-s <n>] [<in.pdb> \
 [<out.pdb>]]\n");

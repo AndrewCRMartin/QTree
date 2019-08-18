@@ -19,7 +19,9 @@ SPHERE **UpdateSphereList(REAL   x0,
 ;
 SPHERE **SortSpheresOnX(SPHERE *AllSpheres, int NSphere)
 ;
-void ColourPixel(REAL x, REAL y, SPHERE **spheres, int NSphere)
+void ColourPixel(int xi, int yi, SPHERE **spheres, int NSphere)
+;
+int FindSphere(REAL x, REAL y, SPHERE **spheres, int NSphere, REAL *MaxZ)
 ;
 int FarLeftSearch(SPHERE **spheres, int NSphere, REAL x)
 ;
@@ -29,7 +31,7 @@ int CtrlCExit(void)
 ;
 int CtrlCNoExit(void)
 ;
-void onbreak(void *)
+void onbreak(void *func)
 ;
 void ShadePixel(REAL x, REAL y, REAL z, SPHERE *sphere)
 ;

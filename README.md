@@ -2,7 +2,7 @@
 
 
 
-                              QTree V2.1
+                              QTree V2.3
                               ==========
 
                         Dr. Andrew C.R. Martin
@@ -11,20 +11,19 @@
 
                             Now working at:
 
-               School of Animal and Microbial Sciences,
-                        University of Reading,
-                            Whiteknights,
-                             P.O.Box 228,
-                           Reading RG6 6AJ.
-
-
-              Some modifications made while working at:
-
               Biomolecular Structure and Modelling Unit,
           Department of Biochemistry and Molecular Biology,
                       University College London,
                             Gower Street,
                            LONDON WC1E 6BT
+
+              Some modifications made while working at:
+
+               School of Animal and Microbial Sciences,
+                        University of Reading,
+                            Whiteknights,
+                             P.O.Box 228,
+                           Reading RG6 6AJ.
 
 
    =====================================================================
@@ -34,7 +33,7 @@
    =====================================================================
 
 
-   QTree is Copyright (c) 1993-5, Dr. Andrew C.R. Martin
+   QTree is Copyright (c) 1993-2007, Dr. Andrew C.R. Martin
 
 
    This program is not in the public domain.
@@ -449,4 +448,6 @@ Revision History
                   two sections.
                   Ctrl-C handled properly on non-AmigaDOS systems.
    V2.1  23.10.95 Warnings and errors all go to stderr
-
+   V2.2  14.10.03 Added BOUNDS and RADIUS commands
+   V2.2a 18.10.07 Clean compile with -ansi -Wall -pedantic
+   V2.3  18.10.07 Added HIGHIGHT / BORDERWIDTH

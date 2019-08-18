@@ -3,18 +3,12 @@
    Program:    QTree
    File:       graphics.c
    
-   Version:    V2.2
-   Date:       14.10.03
+   Version:    V2.3
+   Date:       18.10.07
    Function:   Display routines for QTree
    
-   Copyright:  (c) SciTech Software 1993-2003
+   Copyright:  (c) SciTech Software 1993-2007
    Author:     Dr. Andrew C. R. Martin
-   Address:    SciTech Software
-               23, Stag Leys,
-               Ashtead,
-               Surrey,
-               KT21 2TD.
-   Phone:      +44 (0) 1372 275775
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -79,6 +73,7 @@
    V2.0  28.03.95 Modified for output on stdout
    V2.1  23.10.95 Skipped
    V2.2  14.10.03 Skipped
+   V2.3  18.10.03 Skipped
 
 *************************************************************************/
 /* Includes
@@ -186,24 +181,29 @@ void EndGraphics(void)
    21.07.93 Corrected y calculation
    29.07.93 Added centering
    12.08.93 Modified for screen size spec
+   19.10.07 Checks that pixels are in range
 */
 void SetPixel(int x0, int y0, REAL r, REAL g, REAL b)
 {
    int temp;
 
-   x0 += (gScreen[0]-gSize)/2;
-   y0 += (gScreen[1]-gSize)/2;
-   
-   y0 = gScreen[1] - y0 - 1;
-   
-   temp = (int)(256.0 * r + 0.5);
-   sRed[x0][y0]   = (temp > 255) ? 255 : temp;
-   
-   temp = (int)(256.0 * g + 0.5);
-   sGreen[x0][y0] = (temp > 255) ? 255 : temp;
-   
-   temp = (int)(256.0 * b + 0.5);
-   sBlue[x0][y0]  = (temp > 255) ? 255 : temp;
+   if((x0 >= 0) && (x0 < gScreen[0]) &&
+      (y0 >= 0) && (y0 < gScreen[1]))
+   {
+      x0 += (gScreen[0]-gSize)/2;
+      y0 += (gScreen[1]-gSize)/2;
+      
+      y0 = gScreen[1] - y0 - 1;
+      
+      temp = (int)(256.0 * r + 0.5);
+      sRed[x0][y0]   = (temp > 255) ? 255 : temp;
+      
+      temp = (int)(256.0 * g + 0.5);
+      sGreen[x0][y0] = (temp > 255) ? 255 : temp;
+      
+      temp = (int)(256.0 * b + 0.5);
+      sBlue[x0][y0]  = (temp > 255) ? 255 : temp;
+   }
 }
 
 /************************************************************************/

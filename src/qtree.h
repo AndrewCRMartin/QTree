@@ -3,18 +3,12 @@
    Program:    QTree
    File:       qtree.h
    
-   Version:    V2.2
-   Date:       14.10.03
+   Version:    V2.3
+   Date:       18.10.07
    Function:   Include file for QTree
    
-   Copyright:  (c) SciTech Software 1993-2003
+   Copyright:  (c) SciTech Software 1993-2007
    Author:     Dr. Andrew C. R. Martin
-   Address:    SciTech Software
-               23, Stag Leys,
-               Ashtead,
-               Surrey,
-               KT21 2TD.
-   Phone:      +44 (0) 1372 275775
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -80,6 +74,7 @@
    V2.0  30.03.95 Skipped
    V2.1  23.10.95 Skipped
    V2.2  14.10.03 Added BOUNDS and RADIUS stuff
+   V2.3  18.10.07 Added highlight stuff
 
 *************************************************************************/
 
@@ -104,10 +99,12 @@
 /************************************************************************/
 /* Defines
 */
-#define SIZE  512       /* Display size (square) 256                    */
-#define XSIZE 800       /* Screen width          320                    */
-#define YSIZE 600       /* Screen height         256                    */
-#define MAXATNAM 8      /* Max atom name array size                     */
+#define SIZE  512             /* Display size (square) 256              */
+#define XSIZE 800             /* Screen width          320              */
+#define YSIZE 600             /* Screen height         256              */
+#define MAXATNAM 8            /* Max atom name array size               */
+#define BORDER_NEIGHBOUR    1 /* Number of neighbouring pixels to test  */
+#define DEF_BORDERWIDTH     0 /* Default Border width in pixels = 2x+1  */
 
 /************************************************************************/
 /* Structure type definitions
@@ -120,8 +117,10 @@ typedef struct
          ymin, ymax,
          rad,
          r, g, b,
+         hr, hg, hb,
          shine,
          metallic;
+   int   highlight;
    BOOL  set;
 }  SPHERE;
 
@@ -173,7 +172,8 @@ REAL   gScale     = 0.9,   /* Scaling factor                            */
 VEC3F  gMidPoint;          /* Mid point of structure for centering      */
 char   gOutFile[160];      /* Output file name                          */
 int    gSize = SIZE,       /* Display size                              */
-       gScreen[2];         /* Screen size                               */
+       gScreen[2],         /* Screen size                               */
+       gBorderWidth = DEF_BORDERWIDTH; /* Border width for HIGHLIGHT    */
 SLAB   gSlab;              /* Slabbing                                  */
 BOUNDS gBounds;            /* User specified boundary of image          */
 RADII  *gRadii = NULL;     /* Linked list of atom radii                 */
@@ -185,7 +185,8 @@ extern REAL   gScale,
 extern VEC3F  gMidPoint;
 extern char   gOutFile[160];
 extern int    gSize,
-              gScreen[2];
+              gScreen[2],
+              gBorderWidth;
 extern SLAB   gSlab;
 extern BOUNDS gBounds;
 extern RADII  *gRadii;

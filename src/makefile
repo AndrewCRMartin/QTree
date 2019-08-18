@@ -1,10 +1,15 @@
 CC     = cc
 OFILES = qtree.o graphics.o commands.o 
-LFILES = bioplib/RotPDB.o bioplib/ReadPDB.o bioplib/help.o \
-bioplib/parse.o  \
-bioplib/fsscanf.o bioplib/ApMatPDB.o \
- bioplib/GetCGPDB.o bioplib/WindIO.o \
-bioplib/WritePDB.o bioplib/angle.o  \
+LFILES = bioplib/RotPDB.o \
+bioplib/ReadPDB.o \
+bioplib/help.o \
+bioplib/parse.o \
+bioplib/fsscanf.o \
+bioplib/ApMatPDB.o \
+bioplib/GetCGPDB.o \
+bioplib/WindIO.o \
+bioplib/WritePDB.o \
+bioplib/angle.o \
 bioplib/ParseRes.o \
 bioplib/array2.o \
 bioplib/padterm.o \
@@ -19,13 +24,8 @@ bioplib/chindex.o \
 bioplib/TranslatePDB.o \
 bioplib/CreateRotMat.o 
 
-
-
-
-
-
-
-UFILES = bioplib/ReadPDB.o bioplib/angle.o \
+UFILES = bioplib/ReadPDB.o \
+bioplib/angle.o \
 bioplib/fsscanf.o \
 bioplib/WritePDB.o \
 bioplib/OpenStdFiles.o \
@@ -33,11 +33,6 @@ bioplib/CopyPDB.o \
 bioplib/chindex.o \
 bioplib/FindNextResidue.o \
 bioplib/padterm.o
-
-
-
-
-
 
 all : qtree worms ballstick cpk
 
@@ -58,5 +53,3 @@ cpk : cpk.o $(UFILES)
 
 .c.o  :
 	$(CC) -o $@ -c $<
-   
-   
