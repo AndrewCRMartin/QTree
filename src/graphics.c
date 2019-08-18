@@ -3,12 +3,12 @@
    Program:    QTree
    File:       graphics.c
    
-   Version:    V2.4
-   Date:       27.01.15
+   Version:    V2.5
+   Date:       27.01.19
    Function:   Display routines for QTree
    
-   Copyright:  (c) SciTech Software 1993-2015
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1993-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -75,6 +75,7 @@
    V2.2  14.10.03 Skipped
    V2.3  18.10.03 Skipped
    V2.4  27.01.15 Skipped
+   V2.5  18.08.19 General cleanup and moved into GitHub
 
 *************************************************************************/
 /* Includes
@@ -105,26 +106,26 @@ static unsigned char
    Perform any initialisation for graphics.
    19.07.93 Original    By: ACRM
    12.08.93 Modified for file output only.
-   04.01.94 Added casts on FreeArray2D
+   04.01.94 Added casts on blFreeArray2D
 */
 BOOL InitGraphics(void)
 {
    int   x, y;
    
-   sRed   = (unsigned char **)Array2D(sizeof(unsigned char), 
+   sRed   = (unsigned char **)blArray2D(sizeof(unsigned char), 
                                       gScreen[0], gScreen[1]);
-   sGreen = (unsigned char **)Array2D(sizeof(unsigned char), 
+   sGreen = (unsigned char **)blArray2D(sizeof(unsigned char), 
                                       gScreen[0], gScreen[1]);
-   sBlue  = (unsigned char **)Array2D(sizeof(unsigned char), 
+   sBlue  = (unsigned char **)blArray2D(sizeof(unsigned char), 
                                       gScreen[0], gScreen[1]);
 
    if(sRed == NULL || sGreen == NULL || sBlue == NULL)
    {
-      if(sRed   == NULL) FreeArray2D((char **)sRed,  
+      if(sRed   == NULL) blFreeArray2D((char **)sRed,  
                                      gScreen[0], gScreen[1]);
-      if(sGreen == NULL) FreeArray2D((char **)sGreen, 
+      if(sGreen == NULL) blFreeArray2D((char **)sGreen, 
                                      gScreen[0], gScreen[1]);
-      if(sBlue  == NULL) FreeArray2D((char **)sBlue,  
+      if(sBlue  == NULL) blFreeArray2D((char **)sBlue,  
                                      gScreen[0], gScreen[1]);
       
       sRed   = NULL;
@@ -151,7 +152,7 @@ BOOL InitGraphics(void)
    19.07.93 Original    By: ACRM
    29.07.93 Added file output
    12.08.93 Modified for screen size specification
-   04.01.94 Added casts on FreeArray2D
+   04.01.94 Added casts on blFreeArray2D
    28.03.95 No longer checks file specified
 */
 void EndGraphics(void)
@@ -160,11 +161,11 @@ void EndGraphics(void)
    WriteMTVFile(gOutFile,gScreen[0],gScreen[1]);
 
    /* Free memory for RGB arrays                                        */
-   if(sRed   != NULL) FreeArray2D((char **)sRed,   
+   if(sRed   != NULL) blFreeArray2D((char **)sRed,   
                                   gScreen[0], gScreen[1]);
-   if(sGreen != NULL) FreeArray2D((char **)sGreen, 
+   if(sGreen != NULL) blFreeArray2D((char **)sGreen, 
                                   gScreen[0], gScreen[1]);
-   if(sBlue  != NULL) FreeArray2D((char **)sBlue,  
+   if(sBlue  != NULL) blFreeArray2D((char **)sBlue,  
                                   gScreen[0], gScreen[1]);
    
    sRed   = NULL;

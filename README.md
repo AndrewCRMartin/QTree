@@ -2,10 +2,10 @@
 
 
 
-                              QTree V2.3
+                              QTree V2.5
                               ==========
 
-                        Dr. Andrew C.R. Martin
+                        Prof. Andrew C.R. Martin
                            SciTech Software
 
 
@@ -33,7 +33,7 @@
    =====================================================================
 
 
-   QTree is Copyright (c) 1993-2007, Dr. Andrew C.R. Martin
+   QTree is Copyright (c) 1993-2019, Prof. Andrew C.R. Martin
 
 
    This program is not in the public domain.
@@ -141,41 +141,49 @@ Running QTree
 
    Simply type:
    
+```
       qtree <file.pdb> <file.mtv>         (CPK & Worms images)
+```
 
-   A control file (read the help information with qtree -h) may be
+A control file (read the help information with qtree -h) may be
 specified. For example:
    
+```
       qtree -c <ctrl.dat> <file.pdb> <file.mtv>
+```
 
-   If generating ball and stick images after using the BallStick 
+If generating ball and stick images after using the BallStick 
 preprocessor, you should use the -b flag. For example:
    
+```
       qtree -b -c <ctrl.dat> <file.stk> <file.mtv>
+```
 
-   The size of the square used to perform the calculations may be 
+The size of the square used to perform the calculations may be 
 specified using the -r option. (Defaults to 512). For example:
 
+```
       qtree -r 256 <file.pdb> <file.mtv>
+```
 
-   The size of the screen used (i.e. the dimensions of the output file)
+The size of the screen used (i.e. the dimensions of the output file)
 are specified with the -s option. (Defaults to 800x600.) For example:
 
       qtree -r 256 -s 256 256 <file.pdb> <file.mtv>
 
-   There is also a -q switch which causes the program to run quietly
+There is also a -q switch which causes the program to run quietly
 without gerenating any copyright of informational messages.
 
 
 
-   24-bit output is created in a format compatible with the MTV ray 
+24-bit output is created in a format compatible with the MTV ray 
 tracer. This may be displayed using the ImageMagick package under Unix.
       
-
-
    To get further help, type
    
+```
       qtree -h
+      ```
       
       
 
@@ -193,7 +201,9 @@ Running Worms
 
    Simply type:
    
-      worms [-n <n>] [-s <n>] [-d] [-q] <in.pdb> <out.pdb>
+```
+   worms [-n <n>] [-s <n>] [-d] [-q] <in.pdb> <out.pdb>
+```
    
    The -n switch is followed by an integer which specifies the
    number of sphere to be placed between smoothed atom positions
@@ -222,7 +232,9 @@ Running BallStick
       
    Simply type:
    
+```
       ballstick [-n <n>] [-b <b>] [-s <s>] [-d] [-q] <in.pdb> <out.pdb>
+```
       
    The -n switch is followed by an integer specifying the number of small
    spheres to be placed along each bond (default: 30). With large 
@@ -256,7 +268,9 @@ Running CPK
       
    Simply type:
    
+```
       cpk [-q] <in.pdb> <out.pdb>
+```
 
    The -q switch causes the program to run quietly without gerenating
    any copyright of informational messages.
@@ -272,15 +286,19 @@ Pipes Under Unix
 pipes. Therefore, to generate a worms image and display it using the
 ImageMagick display program, you may use a command line like:
 
+```
       worms <in.pdb> | qtree | display mtv:-
+```
 
    To generate a combined image where file1.pdb is to be rendered as
 CPK while file2.pdb is to be rendered as ball and stick, one would use
 the following:
 
+```
       cpk       file1.pdb    image.bst
       ballstick file2.pdb  >>image.bst
       qtree -b image.bst | display mtv:-
+```
 
 
 
@@ -451,3 +469,8 @@ Revision History
    V2.2  14.10.03 Added BOUNDS and RADIUS commands
    V2.2a 18.10.07 Clean compile with -ansi -Wall -pedantic
    V2.3  18.10.07 Added HIGHIGHT / BORDERWIDTH
+   V2.4  27.01.15 Various changes for new bioplib to ensure chain and
+                  insert are handled as strings
+   V2.5  18.08.19 Further changes for new bioplib and cleaned up compile.
+                  Improved Makefiles; Moved into github
+

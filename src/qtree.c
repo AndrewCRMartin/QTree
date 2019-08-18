@@ -3,12 +3,12 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V2.4
-   Date:       27.01.15
+   Version:    V2.5
+   Date:       18.08.19
    Function:   Use quad-tree algorithm to display a molecule
    
-   Copyright:  (c) SciTech Software 1993-2015
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1993-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -101,6 +101,7 @@
    V2.3  18.10.07 Added HIGHLIGHT
    V2.4  27.01.15 Various changes for new bioplib to ensure chain and
                   insert are handled as strings
+   V2.5  18.08.19 General cleanup and moved into GitHub
 
 *************************************************************************/
 /* Includes
@@ -155,7 +156,7 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: QTree V2.4 - SciTech Software, 1993-2015";
+   *sVers="\0$VER: QTree V2.5 - SciTech Software, 1993-2019";
 #endif
 
 
@@ -180,7 +181,7 @@ static unsigned char
    14.09.93 Added gSphScale initialisation
    07.10.93 Argument while() loop checks argc
    28.03.94 Initialises gSlab.flag, etc.
-   04.10.94 Calls ReadPDBAll() if it's ball & stick, so all occupancy
+   04.10.94 Calls blReadPDBAll() if it's ball & stick, so all occupancy
             atoms are read (radius is now stored in occ rather then
             in bval).
    28.03.95 Moved screen text to stderr.
@@ -277,10 +278,10 @@ int main(int argc, char **argv)
       /* Banner message                                                 */
       if(!Quiet)
       {
-         fprintf(stderr,"\nQTree V2.4\n");
+         fprintf(stderr,"\nQTree V2.5\n");
          fprintf(stderr,"========== \n");
          fprintf(stderr,"CPK program for PDB files. SciTech Software\n");
-         fprintf(stderr,"Copyright (C) 1993-2015 SciTech Software. All \
+         fprintf(stderr,"Copyright (C) 1993-2019 SciTech Software. All \
 Rights Reserved.\n");
          fprintf(stderr,"This program is freely distributable providing \
 no profit is made in so doing.\n\n");
@@ -305,9 +306,9 @@ no profit is made in so doing.\n\n");
       {
          /* Read the PDB file                                           */
          if(sBallStick)
-            pdb = ReadPDBAll(fp, &NAtom);
+            pdb = blReadPDBAll(fp, &NAtom);
          else
-            pdb = ReadPDB(fp, &NAtom);
+            pdb = blReadPDB(fp, &NAtom);
          
          if(pdb != NULL)
          {
@@ -1468,18 +1469,19 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.10.07 V2.2a
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 void UsageExit(BOOL ShowHelp)
 {
    if(ShowHelp)
    {
-      DoHelp("HELP",HELPFILE);
-      Help("Dummy","CLOSE");
+      blDoHelp("HELP",HELPFILE);
+      blHelp("Dummy","CLOSE");
    }
    else
    {
-      fprintf(stderr,"\nQTree V2.4 (c) 1993-2015 Dr. Andrew C.R. Martin, \
-SciTech Software\n\n");
+      fprintf(stderr,"\nQTree V2.5 (c) 1993-2019 Prof. Andrew C.R. \
+Martin, SciTech Software\n\n");
       
       fprintf(stderr,"Usage: qtree [-q] [-b] [-c <control.dat>] [-r <n>] \
 [-s <x> <y>] [<file.pdb> [<file.mtv>]]\n");

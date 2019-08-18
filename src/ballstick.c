@@ -3,12 +3,12 @@
    Program:    BallStick
    File:       BallStick.c
    
-   Version:    V2.4
-   Date:       27.01.15
+   Version:    V2.5
+   Date:       28.08.19
    Function:   Preprocessor for QTree to create a Ball & Stick image
    
-   Copyright:  (c) SciTech Software 1993-2015
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1993-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -82,6 +82,7 @@
    V2.2  14.10.03 Changed for new PDB structure
    V2.3  18.10.07 Skipped
    V2.4  27.01.15 Updated for new bioplib
+   V2.5  18.08.19 General cleanup and moved into GitHub
 
 *************************************************************************/
 /* Includes
@@ -110,7 +111,7 @@ static BOOL gMaxSpecified = FALSE;
 
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: BallStick V2.4 - SciTech Software, \
+static unsigned char *sVers="\0$VER: BallStick V2.5 - SciTech Software, \
 1993-2007";
 #endif
 
@@ -135,13 +136,14 @@ void UsageExit(void);
    29.07.93 Added disulphide flag
    04.10.94 Writes to occ rather than bval
    28.03.95 Modified to support stdio. Now calls ParseCmdLine() and
-            OpenStdFiles(). Text goes to stderr
+            blOpenStdFiles(). Text goes to stderr
    23.10.95 V2.1
    30.09.97 V2.1b
    30.06.98 V2.1c
    14.10.03 V2.2
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 int main(int argc, char **argv)
 {
@@ -162,23 +164,23 @@ int main(int argc, char **argv)
    if(ParseCmdLine(argc, argv, infile, outfile, &NDivide, &BallRad,
                    &StickRad, &Disulphides, &Quiet))
    {
-      if(OpenStdFiles(infile, outfile, &in, &out))
+      if(blOpenStdFiles(infile, outfile, &in, &out))
       {
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nBallStick V2.4\n");
+            fprintf(stderr,"\nBallStick V2.5\n");
             fprintf(stderr,"==============\n");
             fprintf(stderr,"Ball and Stick program for use with QTree. \
 SciTech Software\n");
-            fprintf(stderr,"Copyright (C) 1993-2015 SciTech Software. \
+            fprintf(stderr,"Copyright (C) 1993-2019 SciTech Software. \
 All Rights Reserved.\n");
             fprintf(stderr,"This program is freely distributable \
 providing no profit is made in so doing.\n\n");
          }
 
          /* Read PDB file                                               */
-         pdb = ReadPDB(in, &natom);
+         pdb = blReadPDB(in, &natom);
          TotalOut = natom;
          
          if(pdb != NULL)
@@ -197,7 +199,7 @@ providing no profit is made in so doing.\n\n");
                p->occ = BallRad;
             
             /* Re-write the current atom information                    */
-            WritePDB(out,pdb);
+            blWritePDB(out,pdb);
             
             /* Write the stick information                              */
             TotalOut += WriteSticks(out,pdb,NDivide,StickRad,Disulphides);
@@ -249,7 +251,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
    /* In residue links                                                  */
    for(start=pdb; start!=NULL; start=end)
    {
-      end = FindEndPDB(start);
+      end = blFindNextResidue(start);
       
       for(p=start; p!= end; NEXT(p))
       {
@@ -264,7 +266,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
                for(i=0;i<NDivide;i++)
                {
                   /* Copy PDB information from parent atom              */
-                  CopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
+                  blCopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
                   
                   /* V1.11 occ rather than bval                         */
                   /* Set radius                                         */
@@ -305,7 +307,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
                   for(i=0;i<NDivide;i++)
                   {
                      /* Copy PDB information from parent atom           */
-                     CopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
+                     blCopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
                      
                      /* V1.11 occ rather than bval                      */
                      /* Set radius                                      */
@@ -350,7 +352,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
                      for(i=0;i<NDivide;i++)
                      {
                         /* Copy PDB information from parent atom        */
-                        CopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
+                        blCopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
                         
                         /* V1.11 occ rather than bval                   */
                         /* Set radius                                   */
@@ -523,10 +525,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    14.10.03 V2.2
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 void UsageExit(void)
 {
-   fprintf(stderr,"\nBallStick V2.4 (c) 1993-2015 Dr. Andrew C.R. \
+   fprintf(stderr,"\nBallStick V2.5 (c) 1993-2019 Prof. Andrew C.R. \
 Martin, SciTech Software\n\n");
    
    fprintf(stderr,"Usage: BallStick [-q] [-n <n>] [-b <r>] [-s <r>] [-d] \

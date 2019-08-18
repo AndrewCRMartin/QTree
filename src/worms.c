@@ -3,12 +3,12 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V2.4
-   Date:       27.01.15
+   Version:    V2.5
+   Date:       18.08.19
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993-2015
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1993-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -80,6 +80,7 @@
    V2.2a 18.10.07 Changed %lf to %f in printf calls
    V2.3  18.10.07 Added highlight stuff
    V2.4  27.01.15 Changed to use CHAINMATCH() macro
+   V2.5  18.08.19 General cleanup and moved into GitHub
 
 *************************************************************************/
 /* Includes
@@ -106,7 +107,7 @@ static int sTotalCAlpha = 0;
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: Worms V2.4  SciTech Software, 1993-2015";
+   *sVers="\0$VER: Worms V2.5  SciTech Software, 1993-2019";
 #endif
 
 /************************************************************************/
@@ -144,6 +145,7 @@ void Usage(void);
    14.10.03 V2.2
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 int main(int argc, char **argv)
 {
@@ -167,23 +169,23 @@ int main(int argc, char **argv)
    if(ParseCmdLine(argc, argv, infile, outfile, &DivideSmoothIter,
                    &NDivide, &DivSmooth, &Quiet))
    {
-      if(OpenStdFiles(infile, outfile, &in, &out))
+      if(blOpenStdFiles(infile, outfile, &in, &out))
       {
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nWorms V2.4\n");
+            fprintf(stderr,"\nWorms V2.5\n");
             fprintf(stderr,"==========\n");
             fprintf(stderr,"Worms program for use with QTree. SciTech \
 Software\n");
-            fprintf(stderr,"Copyright (C) 1993-2015 SciTech Software. \
+            fprintf(stderr,"Copyright (C) 1993-2019 SciTech Software. \
 All Rights Reserved.\n");
             fprintf(stderr,"This program is freely distributable \
 providing no profit is made in so doing.\n\n");
          }
    
          /* Read PDB file                                               */
-         pdb = ReadPDB(in, &natom);
+         pdb = blReadPDB(in, &natom);
          
          if(pdb != NULL)
          {
@@ -295,7 +297,7 @@ PDB *DivideSmoothPDB(PDB *pdb, int DivideSmoothIter, int *nsmooth)
    for(p=pdb, i=0; p!=NULL; NEXT(p))
    {
       if(!strncmp(p->atnam, "CA  ",4))
-         CopyPDB(&(spline[i++]), p);
+         blCopyPDB(&(spline[i++]), p);
    }
    
    /* Do the division smoothing                                         */
@@ -330,12 +332,12 @@ PDB *DivideSmooth(PDB *InWorm, int NIn)
    if((OutWorm = (PDB *)malloc((NIn + 1) * sizeof(PDB))) == NULL)
       return(NULL);
       
-   CopyPDB(&(OutWorm[0]),   &(InWorm[0]));
-   CopyPDB(&(OutWorm[NIn]), &(InWorm[NIn-1]));
+   blCopyPDB(&(OutWorm[0]),   &(InWorm[0]));
+   blCopyPDB(&(OutWorm[NIn]), &(InWorm[NIn-1]));
    
    for(i=1; i<NIn; i++)
    {
-      CopyPDB(&(OutWorm[i]), &(InWorm[i]));
+      blCopyPDB(&(OutWorm[i]), &(InWorm[i]));
       
       OutWorm[i].x = InWorm[i-1].x + (InWorm[i].x - InWorm[i-1].x)/2.0;
       OutWorm[i].y = InWorm[i-1].y + (InWorm[i].y - InWorm[i-1].y)/2.0;
@@ -407,7 +409,7 @@ PDB *InterpPDB(PDB *spline, int nsmooth, int NDivide, int *nworm)
       {
          int OutPos = i * NDivide + j;
          
-         CopyPDB(&(worm[OutPos]), &(spline[i]));
+         blCopyPDB(&(worm[OutPos]), &(spline[i]));
          worm[OutPos].x = spline[i].x + 
                           j * (spline[i+1].x - spline[i].x)/NDivide;
          worm[OutPos].y = spline[i].y + 
@@ -416,7 +418,7 @@ PDB *InterpPDB(PDB *spline, int nsmooth, int NDivide, int *nworm)
                           j * (spline[i+1].z - spline[i].z)/NDivide;
       }
    }
-   CopyPDB(&(worm[*nworm - 1]), &(spline[nsmooth - 1]));
+   blCopyPDB(&(worm[*nworm - 1]), &(spline[nsmooth - 1]));
 
    return(worm);   
 }
@@ -491,16 +493,18 @@ PDB *FindChainPDB(PDB *pdb)
    13.05.94 Various corrections to copying of residue information and
             of B-spline coords; was getting coords and residue info out
             of sync after ~NStep residues.
+   18.08.19 Initialized some variables
 */
 PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
 {
    int   NCalpha = 0,
-         i, j, k;
+         i, j=0,
+         k;
    PDB   *p,
-         *p0,
-         *p1,
-         *p2,
-         *p3,
+         *p0 = NULL,
+         *p1 = NULL,
+         *p2 = NULL,
+         *p3 = NULL,
          *spline,
          *ca_pdb;
    REAL  a0,
@@ -547,7 +551,7 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
          k = i*(1+NStep) + j;
          
          if(k>=0 && k<*nspline)
-            CopyPDB(&(spline[k]), p);
+             blCopyPDB(&(spline[k]), p);
       }
       i++;
    }
@@ -735,7 +739,7 @@ PDB *BuildCAList(PDB *pdb)
    INIT(ca_pdb, PDB);
    q = ca_pdb;
    if(q==NULL) return(NULL);
-   CopyPDB(q,pdb);   /* We're only interested in the residue info       */
+   blCopyPDB(q,pdb);   /* We're only interested in the residue info     */
 
    /* Copy C-alphas into new linked list                                */
    for(p=pdb; p!=NULL; NEXT(p))
@@ -753,7 +757,7 @@ PDB *BuildCAList(PDB *pdb)
          }
          
          /* Copy PDB record                                             */
-         CopyPDB(q, p);
+         blCopyPDB(q, p);
       }
    }
       
@@ -766,7 +770,7 @@ PDB *BuildCAList(PDB *pdb)
    }
    p=pdb;
    LAST(p);
-   CopyPDB(q,p);     /* Again, only the residue info is relevant        */
+   blCopyPDB(q,p);     /* Again, only the residue info is relevant      */
    
    /* Find pointers to adjacent CAs for N terminus                      */
    p1 = p2 = p3 = NULL;
@@ -937,10 +941,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    14.10.03 V2.2
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nWorms V2.4 (c) 1993-2015 Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\nWorms V2.5 (c) 1993-2019 Prof. Andrew C.R. Martin, \
 SciTech Software\n\n");
    fprintf(stderr,"Usage: worms [-q] [-n <n>] [-d] [-s <n>] [<in.pdb> \
 [<out.pdb>]]\n");

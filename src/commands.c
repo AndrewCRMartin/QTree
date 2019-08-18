@@ -3,12 +3,12 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V2.4
-   Date:       27.01.15
+   Version:    V2.5
+   Date:       18.08.19
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993-2015
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1993-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -62,7 +62,7 @@
    V1.5  14.09.93 Added sphere scaling option
    V1.6  04.01.94 Skipped
    V1.7  24.03.94 Added SLAB option and warning messages.
-                  Removed ParseResSpec() as this is now in the library
+                  Removed blParseResSpec() as this is now in the library
    V1.8  09.05.94 Skipped
    V1.9  13.05.94 Skipped
    V1.10 24.06.94 Default colouring may now be done on temperature
@@ -77,10 +77,11 @@
    V2.1b 08.02.96 Fixed bug in specifying zones. InZone() didn't
                   correctly handle residues within a zone which had
                   insertion codes
-   V2.1c 18.06.96 Changed InZone() to InPDBZone() and moved to bioplib
+   V2.1c 18.06.96 Changed InZone() to blInPDBZone() and moved to bioplib
    V2.2  14.10.03 Added BOUNDS and RADIUS commands
    V2.3  18.10.07 Added HIGHLIGHT command
    V2.4  27.01.15 Modifications for new version of BiopLib
+   V2.5  18.08.19 General cleanup and moved into GitHub
 
 *************************************************************************/
 /* Includes
@@ -226,7 +227,7 @@ BOOL SetupParser(void)
             Added Rotate, matrix, and centre/center
    23.07.93 Added ReportError; added light & exit
    29.07.93 Added background support
-   03.08.93 Corrected call to ApplyMatrixPDB to RotatePDB
+   03.08.93 Corrected call to ApplyMatrixPDB to blRotatePDB
    14.09.93 Added spherescale
    24.03.94 Added SLAB
    24.06.94 Added TEMPERATURE colouring. SetDefault() now has a different
@@ -272,7 +273,8 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
       {
          TERMINATE(buffer);
          
-         key = parse(buffer,PARSER_NCOMM,sKeyWords,sRealParam,sStrParam);
+         key = blParse(buffer, PARSER_NCOMM, sKeyWords, sRealParam,
+                       sStrParam);
          
          switch(key)
          {
@@ -329,7 +331,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                   matrix[i][j] = sRealParam[i*3 + j];
                }
             }
-            RotatePDB(pdb,matrix);
+            blRotatePDB(pdb,matrix);
             break;
          case COM_XMATRIX:
             for(i=0; i<3; i++)
@@ -339,7 +341,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                   matrix[j][i] = sRealParam[i*3 + j];
                }
             }
-            RotatePDB(pdb,matrix);
+            blRotatePDB(pdb,matrix);
             break;
          case COM_CENTRE:
          case COM_CENTER:
@@ -513,7 +515,7 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
    21.07.93 Original    By: ACRM
    29.03.95 Modified to work correctly with b&s images where the 
             appropriate zone occurs in two parts
-   18.06.96 Changed InZone() to InPDBZone()
+   18.06.96 Changed InZone() to blInPDBZone()
    18.10.07 Added type parameter
    27.01.15 Updated for new bioplib
 */
@@ -532,14 +534,14 @@ void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start,
    sscanf(green, "%lf",&g);
    sscanf(blue,  "%lf",&b);
    
-   ParseResSpec(start, chain1, &resnum1, insert1);
-   ParseResSpec(end,   chain2, &resnum2, insert2);
+   blParseResSpec(start, chain1, &resnum1, insert1);
+   blParseResSpec(end,   chain2, &resnum2, insert2);
    
    if(!CHAINMATCH(chain1,chain2)) return;
    
    for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
    {
-      if(InPDBZone(p, chain1[0], resnum1, insert1[0], resnum2, insert2[0]))
+      if(blInPDBZone(p, chain1, resnum1, insert1, resnum2, insert2))
       {
          if(highlight)
          {
@@ -586,7 +588,7 @@ void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam,
    /* Pad residue name to 4 chars. N.B. We assume resnam is large enough
       to handle this!
    */
-   padterm(resnam,4);
+   blPadterm(resnam,4);
    
    for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
    {
@@ -615,9 +617,9 @@ void DoRotate(PDB *pdb, char *direction, char *amount)
    angle  = (REAL)atof(amount);
    angle *= PI/180.0;
    
-   CreateRotMat(*direction, angle, matrix);
+   blCreateRotMat(*direction, angle, matrix);
    
-   RotatePDB(pdb, matrix);
+   blRotatePDB(pdb, matrix);
 }
 
 
@@ -640,11 +642,11 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
    BOOL  found = FALSE;
    
    /* Parse the residue specification                                   */
-   ParseResSpec(resspec, chain, &resnum, insert);
+   blParseResSpec(resspec, chain, &resnum, insert);
    
    /* Tidy up atom specification                                        */
    UPPER(atom);
-   padterm(atom,4);
+   blPadterm(atom,4);
 
    /* Walk the pdb linked list                                          */
    for(p=pdb;p!=NULL;NEXT(p))
@@ -682,7 +684,8 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
 
    /* If residue not found, issue warning                               */
    if(!found)
-      fprintf(stderr,"Warning: Residue for centre of display not found.\n");
+      fprintf(stderr,"Warning: Residue for centre of display not \
+found.\n");
 }
 
 
@@ -729,11 +732,11 @@ void DoSlab(PDB *pdb, char *resspec, char *atom)
    BOOL  found = FALSE;
    
    /* Parse the residue specification                                   */
-   ParseResSpec(resspec, chain, &resnum, insert);
+   blParseResSpec(resspec, chain, &resnum, insert);
    
    /* Tidy up atom specification                                        */
    UPPER(atom);
-   padterm(atom,4);
+   blPadterm(atom,4);
 
    /* Walk the pdb linked list                                          */
    for(p=pdb;p!=NULL;NEXT(p))
@@ -1017,7 +1020,7 @@ void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom,
       /* No *, pad atom to 4 chars. N.B. We assume atom is large enough
          to handle this!
       */
-      padterm(atom,4);
+      blPadterm(atom,4);
    }
    
    /* Change a ' to a * for comparison                                  */

@@ -3,12 +3,12 @@
    Program:    CPK
    File:       cpk.c
    
-   Version:    V2.4
-   Date:       27.01.15
+   Version:    V2.5
+   Date:       18.08.19
    Function:   Size pre-processor for QTree to create CPK images
    
-   Copyright:  (c) SciTech Software 1995-2015
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1995-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -59,6 +59,7 @@
    V2.2  14.10.03 Skipped
    V2.3  18.10.07 Skipped
    V2.4  27.01.15 Skipped
+   V2.5  18.08.19 General cleanup and moved into GitHub
 
 *************************************************************************/
 /* Includes
@@ -94,7 +95,7 @@ void Usage(void);
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: CPK V2.4 - SciTech Software, 1995-2015";
+   *sVers="\0$VER: CPK V2.5 - SciTech Software, 1995-2019";
 #endif
 
 /************************************************************************/
@@ -119,12 +120,12 @@ int main(int argc, char **argv)
       if(!quiet)
          Banner();
       
-      if(OpenStdFiles(infile, outfile, &in, &out))
+      if(blOpenStdFiles(infile, outfile, &in, &out))
       {
-         if((pdb = ReadPDB(in, &natom))!=NULL)
+         if((pdb = blReadPDB(in, &natom))!=NULL)
          {
             PatchSizes(pdb);
-            WritePDB(out, pdb);
+            blWritePDB(out, pdb);
          }
       }
    }
@@ -147,13 +148,14 @@ int main(int argc, char **argv)
    14.10.03 V2.2
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 void Banner(void)
 {
-   fprintf(stderr,"\nCPK V2.4\n");
+   fprintf(stderr,"\nCPK V2.5\n");
    fprintf(stderr,"========\n");
    fprintf(stderr,"CPK preprocessor for QTree. SciTech Software\n");
-   fprintf(stderr,"Copyright (C) 1995-2015 SciTech Software. All Rights \
+   fprintf(stderr,"Copyright (C) 1995-2019 SciTech Software. All Rights \
 Reserved.\n");
    fprintf(stderr,"This program is freely distributable providing no \
 profit is made in so doing.\n\n");
@@ -175,22 +177,22 @@ void PatchSizes(PDB *pdb)
    {
       switch(p->atnam[0])
       {
-      case 'C':                           /* Carbon:      r = 1.7    */
+      case 'C':                           /* Carbon:      r = 1.7       */
          p->occ  = 1.7;
          break;
-      case 'N':                           /* Nitrogen:    r = 1.7    */
+      case 'N':                           /* Nitrogen:    r = 1.7       */
          p->occ  = 1.7;
          break;
-      case 'O':                           /* Oxygen:      r = 1.35   */
+      case 'O':                           /* Oxygen:      r = 1.35      */
          p->occ  = 1.35;
          break;
-      case 'S':                           /* Sulphur:     r = 1.7    */
+      case 'S':                           /* Sulphur:     r = 1.7       */
          p->occ  = 1.7;
          break;
-      case 'H':                           /* Hydrogen:    r = 1.0    */
+      case 'H':                           /* Hydrogen:    r = 1.0       */
          p->occ  = 1.0;
          break;
-      default:                            /* Default:     r = 1.7    */
+      default:                            /* Default:     r = 1.7       */
          p->occ  = 1.7;
          break;
       }
@@ -271,10 +273,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    14.10.03 V2.2
    18.10.07 V2.3
    27.01.15 V2.4
+   18.08.19 V2.5
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nCPK V2.4 (c) 1995-2015, SciTech Software\n\n");
+   fprintf(stderr,"\nCPK V2.5 (c) 1995-2019, SciTech Software\n\n");
 
    fprintf(stderr,"Usage: cpk [-q] [in.pdb [out.pdb]]\n");
    fprintf(stderr,"       -q Operate quietly\n\n");
