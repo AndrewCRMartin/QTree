@@ -1,0 +1,25 @@
+OFILES = qtree.o graphics.o commands.o 
+LFILES = bioplib/RotatePDB.o bioplib/ReadPDB.o bioplib/Help.o \
+bioplib/Matrix.o bioplib/Parse.o bioplib/General.o \
+bioplib/fsscanf.o bioplib/TranslatePDB.o bioplib/ApplyMatrixPDB.o \
+bioplib/OriginPDB.o bioplib/WindIO.o bioplib/GetCofGPDB.o \
+bioplib/WritePDB.o bioplib/PDBUtil.o bioplib/angle.o bioplib/array.o \
+bioplib/RenumAtomsPDB.o 
+
+UFILES = bioplib/ReadPDB.o bioplib/PDBUtil.o bioplib/angle.o \
+bioplib/array.o bioplib/fsscanf.o bioplib/RenumAtomsPDB.o \
+bioplib/WritePDB.o bioplib/general.o bioplib/WindIO.o
+
+qtree :  $(OFILES) $(LFILES)
+   SC $(OFILES) $(LFILES) LINK math=8
+
+worms :  worms.o $(UFILES)
+   SC worms.o $(UFILES) LINK math=8
+
+BallStick : BallStick.o $(UFILES)
+   SC BallStick.o $(UFILES) LINK math=8
+
+.c.o  :
+   SC $* math=8
+   
+   

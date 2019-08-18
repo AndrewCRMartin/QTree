@@ -1,0 +1,16 @@
+OFILES = qtree.o graphics.o commands.o 
+COPT   = -systype sysv -I/usr/p/amartin/inc -L/usr/p/amartin/inc/bioplib
+
+qtree :  $(OFILES) 
+	cc $(COPT) -o qtree $(OFILES) -lbiop -lm -lbsd
+
+worms :  worms.o 
+	cc $(COPT) -o worms worms.o -lbiop -lm -lbsd
+
+BallStick : BallStick.o 
+	cc $(COPT) -o BallStick BallStick.o -lbiop -lm -lbsd
+
+.c.o  :
+	cc $(COPT) -o $@ -c $<
+   
+   
