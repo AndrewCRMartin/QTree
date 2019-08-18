@@ -3,11 +3,11 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V1.5
-   Date:       14.09.93
+   Version:    V1.7
+   Date:       28.03.94
    Function:   Use quad-tree algorithm to display a molecule
    
-   Copyright:  (c) SciTech Software 1993
+   Copyright:  (c) SciTech Software 1993-4
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -63,13 +63,6 @@
       DEPTHCUE    - Perform depth cueing
       SHOW_INFO   - Show run statistics
 
-   N.B. UNIX USERS
-   ---------------
-   For UNIX systems, no equivalent of assign exists though one could get
-   around this with a link or using environment variables. For the moment,
-   the complete path for the help file must be specifed in the define
-   which is specifed below.
-   
 **************************************************************************
 
    Revision History:
@@ -83,6 +76,9 @@
                   Changed to require output file. Removed direct graphic
                   display
    V1.5  14.09.93 Added sphere scaling option
+   V1.6  04.01.94 Fixed bug in argument parsing
+   V1.7  28.03.94 Handles SLAB. Applies sphere scaling when radius comes
+                  from B-value
 
 *************************************************************************/
 /* Includes
@@ -109,19 +105,10 @@
 
 
 /************************************************************************/
-/* Defines. N.B. The unix HELPFILE define will need to be modifed for
-   your particular system.
+/* Defines
 */
 #define DEF_CONTROL  "qtree.def"    /* Default control file             */
-
-/* For unix we need a complete path since no assign is available to
-   look in an alternative directory for the file
-*/
-#ifdef unix
-#define HELPFILE     "/usr/p/amartin/help/qtree.hlp"
-#else
 #define HELPFILE     "qtree.hlp"    /* Help file                        */
-#endif
 
 /************************************************************************/
 /* Prototypes
@@ -143,7 +130,8 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: QTree V1.5 - SciTech Software, 1993";
+static unsigned char 
+   *sVers="\0$VER: QTree V1.7 - SciTech Software, 1993-4";
 #endif
 
 /************************************************************************/
@@ -166,6 +154,7 @@ static unsigned char *sVers="\0$VER: QTree V1.5 - SciTech Software, 1993";
             Requires output file to be specified
    14.09.93 Added gSphScale initialisation
    07.10.93 Argument while() loop checks argc
+   28.03.94 Initialises gSlab.flag, etc.
 */
 main(int argc, char **argv)
 {
@@ -213,6 +202,10 @@ main(int argc, char **argv)
    gScreen[0] = XSIZE;
    gScreen[1] = YSIZE;
 
+   /* Initialise for slabbing                                           */
+   gSlab.flag  = FALSE;
+   gSlab.z     = 0.0;
+   gSlab.depth = 1000.0;
 
    /* Parse the command line                                            */
    argc--;  argv++;
@@ -287,10 +280,10 @@ main(int argc, char **argv)
    gLight.spec = FALSE;
    
    /* Banner message                                                    */
-   printf("\nQTree V1.5\n");
+   printf("\nQTree V1.7\n");
    printf("==========\n");
    printf("CPK program for PDB files. SciTech Software\n");
-   printf("Copyright (C) 1993 SciTech Software. All Rights Reserved.\n");
+   printf("Copyright (C) 1993-4 SciTech Software. All Rights Reserved.\n");
    printf("This program is freely distributable providing no profit is \
 made in so doing.\n\n");
    printf("Rendering...");
@@ -318,7 +311,11 @@ made in so doing.\n\n");
       
             /* Set and scale coords in sphere list                      */
             MapSpheres(pdb, spheres, NAtom);
-            
+
+	    /* Remove spheres outside slab range                        */
+            if(gSlab.flag)
+		spheres = SlabSphereList(spheres, &NAtom);
+	    
             /* Free memory of PDB linked list                           */
             FREELIST(pdb, PDB);
             pdb = NULL;
@@ -381,6 +378,8 @@ list.\n");
             Added worm support
    28.07.93 Added ball & stick support
    14.09.93 Multiply radii by sphere scaling factor
+   29.03.94 Applies z scaling to the slab data as well.
+            Radius multiplied by gSphScale when using bval
 */
 void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
 {
@@ -404,7 +403,7 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
    
       if(sBallStick)
       {
-         spheres[i].rad = p->bval;
+         spheres[i].rad = p->bval * gSphScale;
       }
       else
       {
@@ -478,6 +477,11 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
       spheres[i].ymax = spheres[i].y + spheres[i].rad;
       spheres[i].ymin = spheres[i].y - spheres[i].rad;
    }
+
+   /* Apply z scaling to the Slab information                           */
+   gSlab.z     -= gMidPoint.z;
+   gSlab.z     *= gSize * gScale / size;
+   gSlab.depth *= gSize * gScale / size;
    
 #ifdef DEPTHCUE
    /* Calculate values for depth cueing                                 */
@@ -1127,7 +1131,6 @@ void ShadePixel(REAL x, REAL y, REAL z, SPHERE *sphere)
    SetPixel((int)x, (int)y, rr, gg, bb);
 }
 
-
 /************************************************************************/
 /*>void UsageExit(BOOL ShowHelp)
    -----------------------------
@@ -1162,5 +1165,63 @@ void UsageExit(BOOL ShowHelp)
       printf("       Enter qtree -h to enter the help program\n");
    }
    exit(0);
+}
+
+/************************************************************************/
+/*>SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
+   ---------------------------------------------------
+   Trim the sphere list by removing atoms outside the slabbing range
+   Natom is required both for input and output. The old sphere list is
+   freed before the routine returns.
+   The routine allocates a new list of the same length as the old list
+   which is slightly wasteful of memory, but the old list is freed, so
+   it's not a memory loss compared with not calling the routine.
+   If memory allocation fails returns the input list unmodified.
+
+   Input:    SPHERE  *spheres   Array of spheres
+   I/O:      int     *Natom     Length of input and output sphere lists
+   Returns:  SPHERE  *          Updated sphere list
+
+   28.03.94 Original    By: ACRM
+   29.03.94 Modified such that any atom which overlaps the slab will
+            be included when OVERLAP_SLAB is defined
+*/
+SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
+{
+   SPHERE *spl;
+   int    i,
+          NOut;
+   REAL   SlabMin,
+          SlabMax;
+
+   /* Allocate memory for new sphere list                               */
+   if((spl = (SPHERE *)malloc(*Natom * sizeof(SPHERE)))==NULL)
+      return(spheres);
+
+   /* Calculate bounds of the slab                                      */
+   SlabMin = gSlab.z - gSlab.depth/(REAL)2.0;
+   SlabMax = gSlab.z + gSlab.depth/(REAL)2.0;
+
+   /* Copy spheres within slab                                          */
+   for(i=0, NOut=0; i<(*Natom); i++)
+   {
+#ifdef OVERLAP_SLAB
+      REAL zmin = (spheres[i].z - spheres[i].rad),
+           zmax = (spheres[i].z + spheres[i].rad);
+
+      if((zmax >= SlabMin && zmax <= SlabMax) ||
+         (zmin >= SlabMin && zmin <= SlabMax) ||
+         (zmin <= SlabMin && zmax >= SlabMax))
+#else
+      if(spheres[i].z >= SlabMin && spheres[i].z <= SlabMax)
+#endif
+      {
+         spl[NOut] = spheres[i];
+         NOut++;
+      }
+   }
+
+   *Natom = NOut;
+   return(spl);
 }
 

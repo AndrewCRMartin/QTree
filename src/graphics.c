@@ -3,11 +3,11 @@
    Program:    QTree
    File:       graphics.c
    
-   Version:    V1.5
-   Date:       14.09.93
+   Version:    V1.7
+   Date:       24.03.94
    Function:   Display routines for QTree
    
-   Copyright:  (c) SciTech Software 1993
+   Copyright:  (c) SciTech Software 1993-4
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -59,6 +59,8 @@
                   Changed to require output file. Removed direct graphic
                   display
    V1.5  14.09.93 Skipped
+   V1.6  04.01.94 Added casts for GCC
+   V1.7  24.03.94 Minimal tidying up
 
 *************************************************************************/
 /* Includes
@@ -89,6 +91,7 @@ static unsigned char
    Perform any initialisation for graphics.
    19.07.93 Original    By: ACRM
    12.08.93 Modified for file output only.
+   04.01.94 Added casts on FreeArray2D
 */
 BOOL InitGraphics(void)
 {
@@ -103,9 +106,12 @@ BOOL InitGraphics(void)
 
    if(sRed == NULL || sGreen == NULL || sBlue == NULL)
    {
-      if(sRed   == NULL) FreeArray2D(sRed,   gScreen[0], gScreen[1]);
-      if(sGreen == NULL) FreeArray2D(sGreen, gScreen[0], gScreen[1]);
-      if(sBlue  == NULL) FreeArray2D(sBlue,  gScreen[0], gScreen[1]);
+      if(sRed   == NULL) FreeArray2D((char **)sRed,  
+                                     gScreen[0], gScreen[1]);
+      if(sGreen == NULL) FreeArray2D((char **)sGreen, 
+                                     gScreen[0], gScreen[1]);
+      if(sBlue  == NULL) FreeArray2D((char **)sBlue,  
+                                     gScreen[0], gScreen[1]);
       
       sRed   = NULL;
       sGreen = NULL;
@@ -131,6 +137,7 @@ BOOL InitGraphics(void)
    19.07.93 Original    By: ACRM
    29.07.93 Added file output
    12.08.93 Modified for screen size specification
+   04.01.94 Added casts on FreeArray2D
 */
 void EndGraphics(void)
 {
@@ -139,9 +146,12 @@ void EndGraphics(void)
       WriteMTVFile(gOutFile,gScreen[0],gScreen[1]);
 
    /* Free memory for RGB arrays                                        */
-   if(sRed   != NULL) FreeArray2D(sRed,   gScreen[0], gScreen[1]);
-   if(sGreen != NULL) FreeArray2D(sGreen, gScreen[0], gScreen[1]);
-   if(sBlue  != NULL) FreeArray2D(sBlue,  gScreen[0], gScreen[1]);
+   if(sRed   != NULL) FreeArray2D((char **)sRed,   
+                                  gScreen[0], gScreen[1]);
+   if(sGreen != NULL) FreeArray2D((char **)sGreen, 
+                                  gScreen[0], gScreen[1]);
+   if(sBlue  != NULL) FreeArray2D((char **)sBlue,  
+                                  gScreen[0], gScreen[1]);
    
    sRed   = NULL;
    sGreen = NULL;
@@ -192,7 +202,8 @@ void SetAbsPixel(int x0, int y0, REAL r, REAL g, REAL b)
 {
    int temp;
 
-//   y0 = gScreen[1] - y0 - 1;
+/*   y0 = gScreen[1] - y0 - 1;
+*/
    
    temp = (int)(256.0 * r + 0.5);
    sRed[x0][y0]   = (temp > 255) ? 255 : temp;
@@ -235,7 +246,6 @@ BOOL WriteMTVFile(char *FileName, int xsize, int ysize)
             fputc((int)sBlue[x][y],  fp);
          }
       }
-      
       
       fclose(fp);
       return(TRUE);

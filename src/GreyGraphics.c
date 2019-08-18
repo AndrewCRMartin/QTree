@@ -1,3 +1,12 @@
+/* Example grey scale graphics. Abandoned in favour of writing a file
+*/
+
+
+
+
+
+
+
 #include <stdio.h>
 
 #include <intuition/intuition.h>
@@ -41,7 +50,8 @@ BOOL InitGraphics(void)
                    
    /* Open screen                                                       */
    if((scrn = OpenScreenTags(NULL, 
-//                             SA_LikeWorkbench, TRUE,
+/*                             SA_LikeWorkbench, TRUE,
+*/
                              SA_ShowTitle,   FALSE,
                              SA_Type,        CUSTOMSCREEN,
                              SA_Overscan,    OSCAN_STANDARD,

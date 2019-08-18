@@ -2,7 +2,7 @@
 
 
 
-                              QTree V1.5
+                              QTree V1.7
                               ==========
 
 
@@ -27,7 +27,7 @@
    =====================================================================
 
 
-   QTree is Copyright (c) 1993 SciTech Software (Dr. Andrew C.R. Martin)
+   QTree is Copyright (c) 1993-4, Dr. Andrew C.R. Martin
 
 
    The executable program and source code are freely distributable,
@@ -57,7 +57,12 @@ Introduction
    QTree is a program for generating space-filling pictures of molecules
 from PDB files. The code is written to be as portable as possible. Only 
 the routines in graphics.c need to be changed to support the display 
-device being used.
+device being used. 
+
+   QTree and its support programs, Worms and BallStick have been
+compiled and tested on Commodore Amiga, Evans & Sutherland ESV running
+Unix (native compiler), and on a PC running Linux (Gnu C compiler).
+It should run on anything else with no problems!
 
    As of V1.5 of QTree, graphics.c has been changed simply to create
 a 24bit RGB image in MTV raytracer format. No direct graphics device

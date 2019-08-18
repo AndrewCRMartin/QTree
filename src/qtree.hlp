@@ -1,0 +1,237 @@
+#INTRO
+
+
+
+   Introduction
+   ============
+   QTree implements the quad tree algorithm for optimising the generation 
+   of space filling pictures of PDB files. The algorithm takes a square 
+   pixel map and looks to see which atoms fall within the map. If there 
+   are some atoms present it divides the square into 4 sub-squares and 
+   generates an atom list for each. For each sub-square, if atoms are 
+   present, the sub-square is treated as a new master square and the 
+   procedure iterates.
+   
+   Once the square contains only one pixel, the front atom is determined 
+   and the shade is calculated and displayed.
+   
+   In its simplest form, you simply need to enter the command:
+   
+         QTree <file.pdb> <file.mtv>
+         
+   This will use the default atom colouring (Carbon: white, Oxygen: red, 
+   Nitrogen: blue, Sulphur: yellow, Hydrogen: grey, Others: green) and 
+   fill the screen with the image.
+
+   The output file specified on the commands line is a 24bit graphics 
+   file in the simple format used by the MTV raytracer. This may be
+   displayed under X-windows using the ImageMagick software.
+
+   The following command line options are recognised:
+   
+      -b          Interpret BVal column as radii. Used for Ball & Stick 
+                  pictures.
+      -r <n>      Use resolution <n>. The picture is generated using a 
+                  square of this size. Must be a power of 2; the next 
+                  higher power of 2 will be used if it is not.
+                  (Default: 512).
+      -s <x> <y>  Use a screen of dimensions <x> by <y>. This is only
+                  really relevant when a coloured background is used. If
+                  either dimension is smaller than the resolution 
+                  specified with -r, the resolution will be reduced.
+      -c <file>   Specify a control file - see below.
+   
+   You can create a defaults file (which must be named `qtree.def') to 
+   create new defaults, or you can specify a control file on the command 
+   line which specifies the parameters required for this run. This is 
+   done using the form:
+   
+         QTree -c <control.dat> <file.pdb> <file.mtv>
+         
+   The control file or qtree.def contains free format commands which may 
+   be in mixed case and may be abbreviated or commented out using an 
+   exclamation mark (!).
+   
+   This help information describes the available commands. The commands 
+   are handled in turn and over-ride the effect of previous commands.
+#ZONE
+
+
+
+   ZONE res1 res2 r g b
+   
+   Specifies the colour for a range of residues. The residue
+   specifications are in the form:
+   
+         cnnni
+         
+   where c is the chain name, nnn is the residue number and i is the 
+   insert letter. Both the chain name and insert letter are optional.
+   
+   r, g and b specify the colour to be used with values between 0.0 and 
+   1.0 being valid for each of the red, green and blue parameters.
+#ATOM
+
+
+
+   ATOM atom r g b
+   
+   Specifies the colour to be used for an atom type. A wild card (*) may 
+   be used after the first character such that C* represents all carbon 
+   atoms.
+   
+   r, g and b specify the colour to be used with values between 0.0 and 
+   1.0 being valid for each of the red, green and blue parameters.
+#RESIDUE 
+
+
+
+   RESIDUE restype r g b
+
+   Specifies the colour to be used for a residue type. 
+   
+   r, g and b specify the colour to be used with values between 0.0 and 
+   1.0 being valid for each of the red, green and blue parameters.
+#DEFAULT 
+
+
+
+   DEFAULT r g b
+   
+   Specifies the default colour to be used for atoms not otherwise given 
+   a colour.
+   
+   r, g and b specify the colour to be used with values between 0.0 and 
+   1.0 being valid for each of the red, green and blue parameters.
+#AMBIENT 
+
+
+
+   AMBIENT n
+   
+   Specifies the intensity of the ambient light. A value between 0.0 and 
+   1.0 may be specified. (Default: 0.3)
+#SPECULAR
+
+
+
+   SPECULAR
+   
+   Switches on specular reflection (Default: Off).
+#CONTRAST 
+
+
+
+   CONTRAST n
+   
+   Specifies a contrast factor for depth cueing giving a pseudo-shadowing 
+   effect. A value of 0.0 switches off the depth cueing. (Default: 0.75)
+#PHONG 
+
+
+
+   PHONG shine metallic
+   
+   Specifies parameters for specular reflection. The shine parameter 
+   defines the brightness of the specular reflection spot - a larger 
+   value makes the spot brighter (Default: 0.2). The metallic parameter 
+   alters the area covered by the specular reflection spot - a larger 
+   value makes a smaller, more intense spot (Default: 8).
+#SCALE 
+
+
+
+   SCALE n
+   
+   Specifies a scaling factor. The larger the value, the greater the 
+   magnification of the image (Default: 0.9). Useful in conjunction with 
+   the CENTRE command.
+#ROTATE 
+
+
+
+   ROTATE direction angle
+   
+   Rotates the image before display. The direction is specified as x, y 
+   or z and the angle is specified in degrees. If the angle is positive, 
+   the rotation is taken in the following directions:
+   
+         x  Top of image moves towards the viewer
+         y  Left of image moves towards the viewer
+         z  Structure turns anti-clockwise
+#MATRIX 
+
+
+
+   MATRIX 11 12 13 21 22 23 31 32 33
+   
+   Specifies a row-wise rotation matrix.
+#XMATRIX 
+
+
+
+   XMATRIX 11 21 31 12 22 32 13 23 33
+   
+   Specifies a column-wise rotation matrix as used by FRODO & MoG.
+#CENTRE 
+
+
+
+   CENTRE res atom
+   CENTER res atom
+   
+   Centres the display on the specified residue and atom (either spelling
+   is accepted). The residue is specified in the form:
+   
+         cnnni
+         
+   where c is the chain name, nnn is the residue number and i is the 
+   insert letter. Both the chain name and insert letter are optional.
+   
+   If the requested atom is not found, the C-alpha will be used.
+#LIGHT 
+
+
+
+   LIGHT x y z
+   
+   Specifies the position of the light. The values are multiples of the 
+   screen size (Default: 2 2 5).
+#BACKGROUND
+
+
+
+   BACKGROUND r1 g1 b1 r2 g2 b2
+   
+   Specify colouring for the background. r1,g1,b1 is the colour at the 
+   top of the screen; r2,g2,b2 is the colour at the bottom of the screen. 
+   In between, the colours change smoothly. All values are between 0.0 
+   and 1.0. Defaults to all black.
+#SPHERESCALE
+
+
+
+   SPHERESCALE scale
+
+   Specifies a scaling factor to be applied to all atom spheres before
+   display. A value of 1.0 gives the standard size. This can be used to
+   display half van der Waals images and is particularly useful in
+   conjunction with the -b command line option to scale radii based on
+   temperature factors to a sensible size. One can thus display images
+   where the atom radius is proportional to the temperature factor.
+#SLAB
+
+
+
+   SLAB res atom thickness
+
+   Displays a slab through the protein. The slab is centred (on Z) on the
+   specified residue and atom. Only those atoms which intersect a slab
+   of the specified thickness will be displayed.
+
+   Note that atoms only need intersect the slab, their centres do not
+   need to be within the slab. (A compile time option allows this 
+   behaviour to be modified.)
+   
+   If the requested atom is not found, the C-alpha will be used.
+

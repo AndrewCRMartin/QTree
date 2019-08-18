@@ -3,11 +3,11 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V1.4
-   Date:       07.10.93
+   Version:    V1.7
+   Date:       29.03.94
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993
+   Copyright:  (c) SciTech Software 1993-4
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -60,6 +60,10 @@
    V1.2  28.07.93 Corrected bug in failure to open file
    V1.3  11.08.93 Frees other allocated memory
    V1.4  07.10.93 Fixed bug in FindChainPDB()
+   V1.5           Skipped
+   V1.6  04.01.94 Fixed bug in BSplineSmoothPDB()
+                  Made sTotalCAlpha static
+   V1.7  29.03.94 Skipped
 
 *************************************************************************/
 /* Includes
@@ -76,12 +80,13 @@
 /************************************************************************/
 /* Variables global to this file only
 */
-int   sTotalCAlpha = 0;
+static int sTotalCAlpha = 0;
 
 /************************************************************************/
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: Worms V1.4 - SciTech Software, 1993";
+static unsigned char 
+   *sVers="\0$VER: Worms V1.7 - SciTech Software, 1993-1994";
 #endif
 
 /************************************************************************/
@@ -183,10 +188,10 @@ chain.\n");
    }
    
    /* Banner message                                                    */
-   printf("\nWorms V1.4\n");
+   printf("\nWorms V1.7\n");
    printf("==========\n");
    printf("Worms program for use with QTree. SciTech Software\n");
-   printf("Copyright (C) 1993 SciTech Software. All Rights Reserved.\n");
+   printf("Copyright (C) 1993-4 SciTech Software. All Rights Reserved.\n");
    printf("This program is freely distributable providing no profit is \
 made in so doing.\n\n");
 
@@ -477,6 +482,7 @@ PDB *FindChainPDB(PDB *pdb)
    number of points.
    
    23.07.93 Original    By: ACRM
+   04.01.94 Bug fix in allocation of memory for C-alpha list
 */
 PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
 {
@@ -504,6 +510,11 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
    
    /* Update total C-alphas                                             */
    sTotalCAlpha += NCalpha;
+   
+   /* 04.01.94: Increment NCalpha by 2 since we add a dummy CA is added
+      at each end of the chain
+   */
+   NCalpha += 2;
    
    /* Make NStep a multiple of 2                                        */
    if(NStep%2) NStep++;
@@ -536,7 +547,8 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
    }
    
    /* Do the B-spline smoothing                                         */
-   for(p=ca_pdb, i=0; p->next->next->next!=NULL; NEXT(p))
+   /* 04.01.94 Added check on p, p->next & p->next->next                */
+   for(p=ca_pdb, i=0; p->next->next->next != NULL; NEXT(p))
    {
       /* Find pointers                                                  */
       p0 = p;
@@ -796,7 +808,7 @@ PDB *BuildCAList(PDB *pdb)
       free(p->next);
       p->next = NULL;
    }
-   else  /* Calculate the coords for the additional Nter position       */
+   else  /* Calculate the coords for the additional Cter position       */
    {
       q = ca_pdb;
       LAST(q);

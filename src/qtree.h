@@ -3,11 +3,11 @@
    Program:    QTree
    File:       qtree.h
    
-   Version:    V1.5
-   Date:       19.07.93
+   Version:    V1.7
+   Date:       28.03.94
    Function:   Include file for QTree
    
-   Copyright:  (c) SciTech Software 1993
+   Copyright:  (c) SciTech Software 1993-4
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -47,8 +47,8 @@
 
    Notes:
    ======
-   SPEC, DEPTHCUE and SHOW_INFO may be defined for conditional compilation
-   of additional features.
+   SPEC, DEPTHCUE, OVERLAP_SLAB and SHOW_INFO may be defined for 
+   conditional compilation of additional features.
 
 **************************************************************************
 
@@ -60,6 +60,8 @@
    V1.3           Skipped
    V1.4           Skipped
    V1.5  14.09.93 Added gSphScale
+   V1.6           Skipped
+   V1.7  28.03.94 Added Slab
 
 *************************************************************************/
 
@@ -77,7 +79,9 @@
 */
 #define DEPTHCUE        /* Handle depth cueing                          */
 #define SPEC            /* Handle specular reflections                  */
-// #define SHOW_INFO       /* Show program statistics                      */
+#define SHOW_INFO       /* Show program statistics                      */
+#define OVERLAP_SLAB    /* Slabs will include any atom which overlaps the
+                           slab region                                  */
 
 /************************************************************************/
 /* Defines
@@ -116,6 +120,13 @@ typedef struct
          contrast;
 }  DCUE;
 
+typedef struct
+{
+    REAL z,
+         depth;
+    BOOL flag;
+}   SLAB;
+
 /************************************************************************/
 /* Global variables
 */
@@ -128,6 +139,7 @@ VEC3F gMidPoint;           /* Mid point of structure for centering      */
 char  gOutFile[160];       /* Output file name                          */
 int   gSize = SIZE,        /* Display size                              */
       gScreen[2];          /* Screen size                               */
+SLAB  gSlab;               /* Slabbing                                  */
 #else          /*----------------------- Externals ---------------------*/
 extern LIGHT gLight;
 extern DCUE  gDepthCue;
@@ -137,6 +149,7 @@ extern VEC3F gMidPoint;
 extern char  gOutFile[160];
 extern int   gSize,
              gScreen[2];
+extern SLAB  gSlab;
 #endif         /*-------------------------------------------------------*/
 
 

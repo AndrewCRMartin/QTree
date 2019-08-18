@@ -3,11 +3,11 @@
    Program:    BallStick
    File:       BallStick.c
    
-   Version:    V1.2
-   Date:       29.07.93
+   Version:    V1.7
+   Date:       29.03.94
    Function:   Preprocessor for QTree to create a Ball & Stick image
    
-   Copyright:  (c) SciTech Software 1993
+   Copyright:  (c) SciTech Software 1993-4
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -57,6 +57,11 @@
    V1.0  28.07.93 Original
    V1.1           Skipped
    V1.2  29.07.93 Added support for disulphide bonds
+   V1.3           Skipped
+   V1.4           Skipped
+   V1.5           Skipped
+   V1.6  04.01.94 Made externals static
+   V1.7  29.03.94 Skipped
 
 *************************************************************************/
 /* Includes
@@ -73,14 +78,14 @@
 /************************************************************************/
 /* Variables global to this file only
 */
-int   sTotalCAlpha = 0;
-PDB   *sStickArray = NULL;
+static int sTotalCAlpha = 0;
+static PDB *sStickArray = NULL;
 
 /************************************************************************/
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: BallStick V1.2 - SciTech Software, \
-1993";
+static unsigned char *sVers="\0$VER: BallStick V1.7 - SciTech Software, \
+1993-4";
 #endif
 
 /************************************************************************/
@@ -171,10 +176,10 @@ int main(int argc, char **argv)
    }
    
    /* Banner message                                                    */
-   printf("\nBallStick V1.2\n");
+   printf("\nBallStick V1.7\n");
    printf("==============\n");
    printf("Ball and Stick program for use with QTree. SciTech Software\n");
-   printf("Copyright (C) 1993 SciTech Software. All Rights Reserved.\n");
+   printf("Copyright (C) 1993-4 SciTech Software. All Rights Reserved.\n");
    printf("This program is freely distributable providing no profit is \
 made in so doing.\n\n");
 
@@ -355,7 +360,6 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
    
    return(NBall);
 }   
-
 
 /************************************************************************/
 /*>void WriteBalls(FILE *fp, PDB *balls, int nballs)

@@ -3,11 +3,11 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V1.5
-   Date:       14.09.93
+   Version:    V1.7
+   Date:       24.03.94
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993
+   Copyright:  (c) SciTech Software 1993-4
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -56,6 +56,9 @@
    V1.3           Skipped
    V1.4           Skipped
    V1.5  14.09.93 Added sphere scaling option
+   V1.6  04.01.94 Skipped
+   V1.7  24.03.94 Added SLAB option and warning messages.
+                  Removed ParseResSpec() as this is now in the library
 
 *************************************************************************/
 /* Includes
@@ -106,14 +109,13 @@
 #define COM_LIGHT             14
 #define COM_BACKGRND          15
 #define COM_SPHSCALE          16
-#define PARSER_NCOMM          17
-
+#define COM_SLAB              17
+#define PARSER_NCOMM          18
 
 /************************************************************************/
 KeyWd sKeyWords[PARSER_NCOMM];         /* Parser keywords               */
 char  *sStrParam[PARSER_MAXSTRPARAM];  /* Parser string parameters      */
 REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
-
 
 /************************************************************************/
 /*>BOOL SetupParser(void)
@@ -123,6 +125,7 @@ REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
    22.07.93 Added Rotate, matrix, and centre/center
    23.07.93 Added light & background
    14.09.93 Added spherescale
+   24.03.94 Added SLAB
 */
 BOOL SetupParser(void)
 {
@@ -160,6 +163,7 @@ BOOL SetupParser(void)
    MAKEKEY(sKeyWords[COM_LIGHT],    "LIGHT",       NUMBER,3);
    MAKEKEY(sKeyWords[COM_BACKGRND], "BACKGROUND",  NUMBER,6);
    MAKEKEY(sKeyWords[COM_SPHSCALE], "SPHERESCALE", NUMBER,1);
+   MAKEKEY(sKeyWords[COM_SLAB],     "SLAB",        STRING,3);
    
    /* Check all allocations OK                                          */
    for(i=0; i<PARSER_NCOMM; i++)
@@ -184,6 +188,7 @@ BOOL SetupParser(void)
    29.07.93 Added background support
    03.08.93 Corrected call to ApplyMatrixPDB to RotatePDB
    14.09.93 Added spherescale
+   24.03.94 Added SLAB
 */
 void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                    BOOL ReportError)
@@ -191,7 +196,9 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
    FILE  *fp = NULL;
    char  buffer[160],
          CentreRes[16],
-         CentreAtom[8];
+         CentreAtom[8],
+         SlabRes[16],
+         SlabAtom[8];
    int   key,
          i, j;
    REAL  DefaultRGB[3],
@@ -217,7 +224,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
       {
          TERMINATE(buffer);
          
-         key = parse(buffer, PARSER_NCOMM, sKeyWords, sRealParam, sStrParam);
+         key = parse(buffer,PARSER_NCOMM,sKeyWords,sRealParam,sStrParam);
          
          switch(key)
          {
@@ -303,6 +310,11 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
          case COM_SPHSCALE:
             gSphScale = sRealParam[0];
             break;
+         case COM_SLAB:
+            strcpy(SlabRes,sStrParam[0]);
+            strcpy(SlabAtom,sStrParam[1]);
+            sscanf(sStrParam[2],"%lf",&(gSlab.depth));
+            gSlab.flag = TRUE;
          default:
             break;
          }
@@ -312,6 +324,8 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
          DoDefault(spheres,NSphere,DefaultRGB);
       if(SetCentre)
          DoCentre(pdb,CentreRes,CentreAtom);
+      if(gSlab.flag)
+         DoSlab(pdb,SlabRes,SlabAtom);
    }
    else
    {
@@ -357,8 +371,6 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
       spheres[i].metallic = metallic;
    }
 }
-
-
 
 /************************************************************************/
 /*>void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
@@ -426,53 +438,6 @@ void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start,
          break;
       }
    }
-}
-
-/************************************************************************/
-/*>void ParseResSpec(char *spec, char *chain, int *resnum, char *insert)
-   ---------------------------------------------------------------------
-   Splits up a residue specification of the form 
-         [c]num[i]
-   into chain, resnum and insert. Chain and insert are optional and will
-   be set to spaces if not specified.
-   
-   21.07.93 Original    By: ACRM
-*/
-void ParseResSpec(char *spec, char *chain, int *resnum, char *insert)
-{
-   char  *ptr,
-         *ptr2;
-
-   UPPER(spec);   
-   KILLLEADSPACES(ptr, spec);
-     
-   /* Extract chain from spec                                           */
-   if(isdigit(*ptr))
-   {
-      /* Spec started with a digit, so no chain specified               */
-      *chain = ' ';
-   }
-   else
-   {
-      /* Chain was specified                                            */
-      *chain = *ptr;
-      ptr++;
-   }
-   
-   /* Extract insert from spec                                          */
-   *insert = ' ';
-   for(ptr2 = ptr; *ptr2; ptr2++)
-   {
-      if(!isdigit(*ptr2))
-      {
-         *insert = *ptr2;
-         *ptr2   = '\0';
-         break;
-      }
-   }
-   
-   /* Extract residue number from spec                                  */
-   sscanf(ptr,"%d",resnum);
 }
 
 /************************************************************************/
@@ -571,7 +536,6 @@ void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam,
          spheres[i].set = TRUE;
       }
    }
-   
 }
 
 /************************************************************************/
@@ -599,7 +563,7 @@ void DoRotate(PDB *pdb, char *direction, char *amount)
    Parse a residue spec and centre the display on the specified atom in
    this residue.
    23.07.93 Original    By: ACRM
-   
+   28.03.94 Added warning if atom not found
 */
 void DoCentre(PDB *pdb, char *resspec, char *atom)
 {
@@ -607,6 +571,7 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
          insert;
    int   resnum;
    PDB   *p;
+   BOOL  found = FALSE;
    
    /* Parse the residue specification                                   */
    ParseResSpec(resspec, &chain, &resnum, &insert);
@@ -623,6 +588,9 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
          p->insert[0] == insert &&
          p->chain[0]  == chain)
       {
+         /* Residue found; set flag                                     */
+         found = TRUE;
+
          /* If we've got the correct atom, set midpoint and return      */
          if(!strcmp(p->atnam,atom))
          {
@@ -645,8 +613,11 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
          }
       }
    }
-}
 
+   /* If residue not found, issue warning                               */
+   if(!found)
+      printf("Warning: Residue for centre of display not found.\n");
+}
 
 /************************************************************************/
 /*>void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
@@ -670,3 +641,62 @@ void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
          SetAbsPixel(x,y,r,g,b);
    }
 }
+
+/************************************************************************/
+/*>void DoSlab(PDB *pdb, char *resspec, char *atom)
+   ------------------------------------------------
+   Parse a residue spec and set coords to centre the slab wedge
+   24.03.94 Original (based on DoCentre())    By: ACRM
+   28.03.94 Changed check on atom name to use strncmp()
+            Added warning if not found.
+*/
+void DoSlab(PDB *pdb, char *resspec, char *atom)
+{
+   char  chain,
+         insert;
+   int   resnum;
+   PDB   *p;
+   BOOL  found = FALSE;
+   
+   /* Parse the residue specification                                   */
+   ParseResSpec(resspec, &chain, &resnum, &insert);
+   
+   /* Tidy up atom specification                                        */
+   UPPER(atom);
+   padterm(atom,4);
+
+   /* Walk the pdb linked list                                          */
+   for(p=pdb;p!=NULL;NEXT(p))
+   {
+      /* Check we are in the correct residue                            */
+      if(p->resnum    == resnum &&
+         p->insert[0] == insert &&
+         p->chain[0]  == chain)
+      {
+         /* Residue found; set flag                                     */
+         found = TRUE;
+
+         /* If we've got the correct atom, set midpoint and return      */
+         if(!strncmp(p->atnam,atom,4))
+         {
+            gSlab.z = p->z;
+            
+            return;
+         }
+         
+         /* If it's the CA, record coords; this will be over-ridden by
+            the requested atom if found, since we don't return from this
+            part
+         */
+         if(!strcmp(p->atnam,"CA  "))
+         {
+            gSlab.z = p->z;
+         }
+      }
+   }
+
+   /* If not found residue, print warning                               */
+   if(!found)
+      printf("Warning: Residue for centre of slab not found.\n");
+}
+

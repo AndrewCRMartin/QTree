@@ -35,6 +35,8 @@
 
    Description:
    ============
+   This is an example file for direct graphics support from within QTree.
+   This has now been abandoned in favour of writing a file.
 
 **************************************************************************
 
