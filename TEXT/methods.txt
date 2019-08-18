@@ -1,0 +1,16 @@
+
+QTree algorithm.
+
+Depth cueing: 
+Laurence H. Pearl, `Calculating CPK images on a UNIX workstation'
+J. Mol. Graph. 6(1988),109--111
+
+cos(theta) -> (1 - d + d * (z-Zmin)/(Zmax - Zmin))*cos(theta)
+
+
+
+Fractal Clustering:
+David T. Jones, `The application of fractal clusteriung to efficient 
+molecular ray tracing on low-cost computers'
+J. Mol. Graph. 9(1991),249--253
+

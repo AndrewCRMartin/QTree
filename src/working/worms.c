@@ -3,11 +3,11 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V1.12
-   Date:       21.12.94
+   Version:    V1.3
+   Date:       11.08.93
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -28,8 +28,8 @@
    else breaks this code, I don't want to be blamed for code that does not
    work! The code may not be sold commercially without prior permission 
    from the author, although it may be given away free with commercial 
-   products, providing it is made clear that this program is free and 
-   that the source code is provided with the program.
+   products, providing it is made clear that this program is free and that 
+   the source code is provided with the program.
 
 **************************************************************************
 
@@ -59,17 +59,6 @@
    V1.1  26.07.93 Added B-spline smoothing
    V1.2  28.07.93 Corrected bug in failure to open file
    V1.3  11.08.93 Frees other allocated memory
-   V1.4  07.10.93 Fixed bug in FindChainPDB()
-   V1.5           Skipped
-   V1.6  04.01.94 Fixed bug in BSplineSmoothPDB()
-                  Made sTotalCAlpha static
-   V1.7  29.03.94 Skipped
-   V1.8  09.05.94 Fixed rounding error bug in B-spline smoothing
-   V1.9  13.05.94 Various fixes to B-spline smoothing which was getting
-                  coords out of sync with labels...
-   V1.10 24.06.94 Skipped
-   V1.11 04.10.94 Skipped
-   V1.12 21.12.94 Improved Usage message
 
 *************************************************************************/
 /* Includes
@@ -86,13 +75,12 @@
 /************************************************************************/
 /* Variables global to this file only
 */
-static int sTotalCAlpha = 0;
+int   sTotalCAlpha = 0;
 
 /************************************************************************/
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char 
-   *sVers="\0$VER: Worms V1.12  SciTech Software, 1993-1994";
+static unsigned char *sVers="\0$VER: Worms V1.3 - SciTech Software, 1993";
 #endif
 
 /************************************************************************/
@@ -121,7 +109,6 @@ PDB *BuildCAList(PDB *pdb);
    23.07.93 Original    By: ACRM
    28.07.93 Corrected bug in unable to open file
    11.08.93 Free's memory allocated as divide and worm
-   21.12.94 Improved usage message
 */
 int main(int argc, char **argv)
 {
@@ -170,9 +157,6 @@ int main(int argc, char **argv)
    /* Error in command line                                             */
    if(argc != 2)
    {
-      printf("\nWorms V1.12 (c) 1993-4 Dr. Andrew C.R. Martin, SciTech \
-Software\n\n");
-      
       printf("Usage: worms [-n <n>] [-d] [-s <n>] <in.pdb> <out.pdb>\n");
       printf("       -n Specify the number of spheres to be placed \
 between splined atoms [30]\n");
@@ -198,11 +182,10 @@ chain.\n");
    }
    
    /* Banner message                                                    */
-   printf("\nWorms V1.12\n");
-   printf("===========\n");
+   printf("\nWorms V1.3\n");
+   printf("==========\n");
    printf("Worms program for use with QTree. SciTech Software\n");
-   printf("Copyright (C) 1993-4 SciTech Software. All Rights \
-Reserved.\n");
+   printf("Copyright (C) 1993 SciTech Software. All Rights Reserved.\n");
    printf("This program is freely distributable providing no profit is \
 made in so doing.\n\n");
 
@@ -214,7 +197,7 @@ made in so doing.\n\n");
       PDB   *start,
             *end,
             *p;
-   
+            
       /* Handle each chain in turn                                      */
       start = pdb;
       
@@ -223,7 +206,7 @@ made in so doing.\n\n");
          end = FindChainPDB(start);
          for(p=start; p->next != end; NEXT(p)) ;
          p->next = NULL;
-
+         
          if(DivSmooth)     /* Use division smoothing                    */
          {
             if((divide = DivideSmoothPDB(start,DivideSmoothIter,&nsmooth))
@@ -247,14 +230,14 @@ made in so doing.\n\n");
                WriteWorm(out, worm, nworm);
             }
          }
-
+      
          if(divide != NULL)   free(divide);
          if(worm   != NULL)   free(worm);
          divide = NULL;
          worm   = NULL;
 
          FREELIST(start, PDB);
-
+         
          start = end;
       }
       
@@ -435,8 +418,6 @@ PDB *InterpPDB(PDB *spline, int nsmooth, int NDivide, int *nworm)
    Find the end of a chain using an inter C-alpha distance criterion. 
    Returns a pointer to the start of the next chain or NULL.
    23.07.93 Original    By: ACRM
-   07.10.93 Now returns NULL if no new chain found (as it should
-            have all along)
 */
 PDB *FindChainPDB(PDB *pdb)
 {
@@ -479,7 +460,6 @@ PDB *FindChainPDB(PDB *pdb)
          CAlpha.z = p->z;
       }
    }
-   return((PDB *)NULL);
 }
 
 /************************************************************************/
@@ -488,16 +468,11 @@ PDB *FindChainPDB(PDB *pdb)
    Takes a PDB linked list, extracts the C-alphas and calls a B-spline
    smoothing routine. 
    Takes a PDB linked list and number of division steps as input; outputs 
-   the number of spline-smoothed points created and returns an array of 
-   PDB structures containing the smoothed C-alpha points.
+   the number of spline-dmoothed points created and returns an array of 
+   PDB structures containing the smoothed C-alpha points and outputs the
+   number of points.
    
    23.07.93 Original    By: ACRM
-   04.01.94 Bug fix in allocation of memory for C-alpha list
-   09.05.94 Added checks on *nspline when filling in the spline data as
-            using t could create rounding errors and one too many items
-   13.05.94 Various corrections to copying of residue information and
-            of B-spline coords; was getting coords and residue info out
-            of sync after ~NStep residues.
 */
 PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
 {
@@ -530,8 +505,7 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
    if(NStep%2) NStep++;
    
    /* Calculate total number of points and spline step (tstep)          */
-   /* 13.05.94 Corrected calculation of number of spline points         */
-   *nspline = ((1 + NStep) * NCalpha) - NStep;
+   *nspline = NStep * (NCalpha - 1);
    tstep    = 1.0/NStep;
    
    /* Allocate sufficient memory for returned PDB array                 */
@@ -547,11 +521,9 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
    /* Copy residue data into the output array                           */
    for(p=ca_pdb->next, i=0; p->next!=NULL; NEXT(p))
    {
-      /* 13.05.94 j<=NStep/2 rather than j<NStep/2                      */
-      for(j=(-NStep)/2; j<=NStep/2; j++)
+      for(j=(-NStep)/2; j<NStep/2; j++)
       {
-         /* 13.05.94 Corrected calculation of k                         */
-         k = i*(1+NStep) + j;
+         k = i*NStep + j;
          
          if(k>=0 && k<*nspline)
             CopyPDB(&(spline[k]), p);
@@ -560,9 +532,7 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
    }
    
    /* Do the B-spline smoothing                                         */
-   /* 04.01.94 Added check on p, p->next & p->next->next                */
-   /* 13.05.94 t<=1.0 rather than t<1.0                                 */
-   for(p=ca_pdb, i=0; p->next->next->next != NULL; NEXT(p))
+   for(p=ca_pdb, i=0; p->next->next->next!=NULL; NEXT(p))
    {
       /* Find pointers                                                  */
       p0 = p;
@@ -572,44 +542,27 @@ PDB *BSplineSmoothPDB(PDB *pdb, int NStep, int *nspline)
       
       /* Do B-spline for x                                              */
       BSplineCoef(p0->x, p1->x, p2->x, p3->x, &a0, &a1, &a2, &a3);
-      for(t=0.0, j=i; t<=1.0 && j<*nspline; t += tstep, j++)
+      for(t=0.0, j=i; t<1.0; t += tstep, j++)
          spline[j].x = ((a3 * t + a2)*t + a1)*t + a0;
 
       /* Do B-spline for y                                              */
       BSplineCoef(p0->y, p1->y, p2->y, p3->y, &a0, &a1, &a2, &a3);
-      for(t=0.0, j=i; t<=1.0 && j<*nspline; t += tstep, j++)
+      for(t=0.0, j=i; t<1.0; t += tstep, j++)
          spline[j].y = ((a3 * t + a2)*t + a1)*t + a0;
 
       /* Do B-spline for z                                              */
       BSplineCoef(p0->z, p1->z, p2->z, p3->z, &a0, &a1, &a2, &a3);
-      for(t=0.0, j=i; t<=1.0 && j<*nspline; t += tstep, j++)
+      for(t=0.0, j=i; t<1.0; t += tstep, j++)
          spline[j].z = ((a3 * t + a2)*t + a1)*t + a0;
          
       /* Reset i for next group                                         */
       i = j;
    }
-
-   /* Each of the above calculates for an atom and each step before the
-      next atom; thus the last atom position isn't done, so do this
-      separately
-   */
-   t = 1.0 + tstep;
-   
-   /* Do B-spline for x                                                 */
-   BSplineCoef(p0->x, p1->x, p2->x, p3->x, &a0, &a1, &a2, &a3);
-   spline[j].x = ((a3 * t + a2)*t + a1)*t + a0;
-   
-   /* Do B-spline for y                                                 */
-   BSplineCoef(p0->y, p1->y, p2->y, p3->y, &a0, &a1, &a2, &a3);
-   spline[j].y = ((a3 * t + a2)*t + a1)*t + a0;
-   
-   /* Do B-spline for z                                                 */
-   BSplineCoef(p0->z, p1->z, p2->z, p3->z, &a0, &a1, &a2, &a3);
-   spline[j].z = ((a3 * t + a2)*t + a1)*t + a0;
    
    /* Free the Calpha linked list                                       */
    FREELIST(ca_pdb, PDB);
-
+   
+   *nspline = i;
    return(spline);   
 }
 
@@ -629,6 +582,8 @@ void BSplineCoef(REAL x0,  REAL x1,  REAL x2,  REAL x3,
    *a2 = (x0 - 2.0*x1 + x2)/2.0;
    *a3 = (-x0 - 3.0*(x2 - x1) + x3)/6.0;
 }
+
+
 
 /************************************************************************/
 /*>void BuildCA(REAL x1, REAL y1, REAL z1, 
@@ -837,7 +792,7 @@ PDB *BuildCAList(PDB *pdb)
       free(p->next);
       p->next = NULL;
    }
-   else  /* Calculate the coords for the additional Cter position       */
+   else  /* Calculate the coords for the additional Nter position       */
    {
       q = ca_pdb;
       LAST(q);
@@ -850,4 +805,3 @@ PDB *BuildCAList(PDB *pdb)
    
    return(ca_pdb);
 }
-

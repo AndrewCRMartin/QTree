@@ -1,0 +1,18 @@
+! Colour the alpha helices of crambin in red, sheets in blue and turns in 
+! green. Disulphide cys in yellow
+!  resid asp   1.0 0.0 0.0
+!  resid glu   1.0 0.0 0.0
+!  resid arg   0.0 0.0 1.0
+!  resid lys   0.0 0.0 1.0
+!  resid tyr   1.0 0.0 1.0
+!  resid phe   1.0 0.0 1.0
+!  resid trp   1.0 0.0 1.0
+!  resid met   1.0 1.0 0.0
+zone 7 19 1.0 0.0 0.0
+zone 23 30 1.0 0.0 0.0
+zone 1 4 0.0 0.0 1.0
+zone 32 35 0.0 0.0 1.0
+zone 41 44 0.0 1.0 0.0
+resid cys   1.0 1.0 0.0
+spec
+rotate y -45

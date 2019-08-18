@@ -103,6 +103,21 @@
    
    r, g and b specify the colour to be used with values between 0.0 and 
    1.0 being valid for each of the red, green and blue parameters.
+#TEMPERATURE
+
+
+
+   TEMPERATURE
+
+   Acts like DEFAULT (q.v.), but specifies that the default colour for
+   atoms not otherwise given a colour should be based on the temperature
+   factor.
+
+   The coolest parts of the structure are coloured blue, middle regions
+   are green and the hottest parts are red.
+
+   Note that 8-bit colour displays may show glitches owing to limited
+   colour mapping.
 #AMBIENT 
 
 

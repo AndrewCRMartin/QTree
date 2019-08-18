@@ -3,11 +3,11 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V1.12a
-   Date:       21.12.94
+   Version:    V1.4
+   Date:       12.08.93
    Function:   Use quad-tree algorithm to display a molecule
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -62,6 +62,7 @@
       SPEC        - Include specular reflection
       DEPTHCUE    - Perform depth cueing
       SHOW_INFO   - Show run statistics
+   
 
 **************************************************************************
 
@@ -75,16 +76,6 @@
                   equal to image rather than XSIZE/YSIZE
                   Changed to require output file. Removed direct graphic
                   display
-   V1.5  14.09.93 Added sphere scaling option
-   V1.6  04.01.94 Fixed bug in argument parsing
-   V1.7  28.03.94 Handles SLAB. Applies sphere scaling when radius comes
-                  from B-value
-   V1.8  09.05.94 Skipped
-   V1.9  13.05.94 Skipped
-   V1.10 24.06.94 Handles TEMPERATURE - changes in commands.c
-   V1.11 04.10.94 With -b, reads radii from occ rather than bval
-   V1.12 21.12.94 Improved Usage message
-   V1.12a21.12.94 Fixed Usage text for -b
 
 *************************************************************************/
 /* Includes
@@ -136,8 +127,7 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char 
-   *sVers="\0$VER: QTree V1.12a - SciTech Software, 1993-4";
+static unsigned char *sVers="\0$VER: QTree V1.4 - SciTech Software, 1993";
 #endif
 
 /************************************************************************/
@@ -158,12 +148,6 @@ static unsigned char
    29.07.93 Added File output & resolution setting
    12.08.93 Added handling of force option.
             Requires output file to be specified
-   14.09.93 Added gSphScale initialisation
-   07.10.93 Argument while() loop checks argc
-   28.03.94 Initialises gSlab.flag, etc.
-   04.10.94 Calls ReadPDBAll() if it's ball & stick, so all occupancy
-            atoms are read (radius is now stored in occ rather then
-            in bval).
 */
 main(int argc, char **argv)
 {
@@ -195,8 +179,7 @@ main(int argc, char **argv)
 #endif
 
    /* Default scaling                                                   */
-   gScale    = 0.9;
-   gSphScale = 1.0;
+   gScale = 0.9;
    
    /* Default image size                                                */
    gSize = SIZE;
@@ -211,15 +194,11 @@ main(int argc, char **argv)
    gScreen[0] = XSIZE;
    gScreen[1] = YSIZE;
 
-   /* Initialise for slabbing                                           */
-   gSlab.flag  = FALSE;
-   gSlab.z     = 0.0;
-   gSlab.depth = 1000.0;
 
    /* Parse the command line                                            */
    argc--;  argv++;
    
-   while(argc && argv[0][0] == '-')
+   while(argv[0][0] == '-')
    {
       switch(argv[0][1])
       {
@@ -289,10 +268,10 @@ main(int argc, char **argv)
    gLight.spec = FALSE;
    
    /* Banner message                                                    */
-   printf("\nQTree V1.12a\n");
-   printf("===========\n");
+   printf("\nQTree V1.4\n");
+   printf("==========\n");
    printf("CPK program for PDB files. SciTech Software\n");
-   printf("Copyright (C) 1993-4 SciTech Software. All Rights Reserved.\n");
+   printf("Copyright (C) 1993 SciTech Software. All Rights Reserved.\n");
    printf("This program is freely distributable providing no profit is \
 made in so doing.\n\n");
    printf("Rendering...");
@@ -307,12 +286,7 @@ made in so doing.\n\n");
    if(InitGraphics())
    {
       /* Read the PDB file                                              */
-      if(sBallStick)
-         pdb = ReadPDBAll(fp, &NAtom);
-      else
-         pdb = ReadPDB(fp, &NAtom);
-      
-      if(pdb != NULL)
+      if((pdb = ReadPDB(fp, &NAtom)) != NULL)
       {
          /* Convert to sphere list                                      */
          if((spheres = CreateSphereList(pdb, NAtom)) != NULL)
@@ -325,11 +299,7 @@ made in so doing.\n\n");
       
             /* Set and scale coords in sphere list                      */
             MapSpheres(pdb, spheres, NAtom);
-
-	    /* Remove spheres outside slab range                        */
-            if(gSlab.flag)
-		spheres = SlabSphereList(spheres, &NAtom);
-	    
+            
             /* Free memory of PDB linked list                           */
             FREELIST(pdb, PDB);
             pdb = NULL;
@@ -391,10 +361,6 @@ list.\n");
    23.07.93 Changed to place centre of molecule on the 0 z-plane.
             Added worm support
    28.07.93 Added ball & stick support
-   14.09.93 Multiply radii by sphere scaling factor
-   29.03.94 Applies z scaling to the slab data as well.
-            Radius multiplied by gSphScale when using bval
-   04.10.94 Sphere radius taken from oxx rather than bval
 */
 void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
 {
@@ -418,33 +384,33 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
    
       if(sBallStick)
       {
-         spheres[i].rad = p->occ * gSphScale;
+         spheres[i].rad = p->bval;
       }
       else
       {
          switch(p->atnam[0])
          {
-         case 'C':                           /* Carbon:      r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
+         case 'C':                           /* Carbon: r = 1.7         */
+            spheres[i].rad      = 1.7;
             break;
-         case 'N':                           /* Nitrogen:    r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
+         case 'N':                           /* Nitrogen: r = 1.7       */
+            spheres[i].rad      = 1.7;
             break;
-         case 'O':                           /* Oxygen:      r = 1.35   */
-            spheres[i].rad    = 1.35 * gSphScale;
+         case 'O':                           /* Oxygen: r = 1.35        */
+            spheres[i].rad      = 1.35;
             break;
-         case 'S':                           /* Sulphur:     r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
+         case 'S':                           /* Sulphur: r = 1.7        */
+            spheres[i].rad      = 1.7;
             break;
-         case 'H':                           /* Hydrogen:    r = 1.0    */
-            spheres[i].rad    = 1.0  * gSphScale;
+         case 'H':                           /* Hydrogen: r = 1.0       */
+            spheres[i].rad      = 1.0;
             break;
          case 'W':                           /* Worm sphere: r = 0.75   */
             if(!strncmp(p->atnam,"WRM ",4))
-               spheres[i].rad = 0.75 * gSphScale;
+               spheres[i].rad   = 0.75;
             break;
-         default:                            /* Default:     r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
+         default:                            /* Default: r = 1.7        */
+            spheres[i].rad      = 1.7;
             break;
          }
       }
@@ -492,11 +458,6 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
       spheres[i].ymax = spheres[i].y + spheres[i].rad;
       spheres[i].ymin = spheres[i].y - spheres[i].rad;
    }
-
-   /* Apply z scaling to the Slab information                           */
-   gSlab.z     -= gMidPoint.z;
-   gSlab.z     *= gSize * gScale / size;
-   gSlab.depth *= gSize * gScale / size;
    
 #ifdef DEPTHCUE
    /* Calculate values for depth cueing                                 */
@@ -1146,6 +1107,7 @@ void ShadePixel(REAL x, REAL y, REAL z, SPHERE *sphere)
    SetPixel((int)x, (int)y, rr, gg, bb);
 }
 
+
 /************************************************************************/
 /*>void UsageExit(BOOL ShowHelp)
    -----------------------------
@@ -1156,7 +1118,6 @@ void ShadePixel(REAL x, REAL y, REAL z, SPHERE *sphere)
    23.07.93 Added help file support
    28.07.93 Added ball & stick support
    12.08.93 Added -s option
-   21.12.94 Added Copyright/version. Corrected text for -b
 */
 void UsageExit(BOOL ShowHelp)
 {
@@ -1167,13 +1128,10 @@ void UsageExit(BOOL ShowHelp)
    }
    else
    {
-      printf("\nQTree V1.12a (c) 1993-4 Dr. Andrew C.R. Martin, SciTech \
-Software\n\n");
-      
       printf("Usage: qtree [-b] [-c <control.dat>] [-r <n>] [-s <x> <y>] \
 <file.pdb> <file.mtv>\n");
       printf("       qtree [-h]\n\n");
-      printf("       -b Interpret occupancy as radius for ball & stick\n");
+      printf("       -b Interpret b-val as radius for ball & stick\n");
       printf("       -c Specify control file\n");
       printf("       -r Specify pixel resolution (power of 2) [%d]\n",
              SIZE);
@@ -1184,63 +1142,5 @@ Software\n\n");
       printf("       Enter qtree -h to enter the help program\n");
    }
    exit(0);
-}
-
-/************************************************************************/
-/*>SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
-   ---------------------------------------------------
-   Trim the sphere list by removing atoms outside the slabbing range
-   Natom is required both for input and output. The old sphere list is
-   freed before the routine returns.
-   The routine allocates a new list of the same length as the old list
-   which is slightly wasteful of memory, but the old list is freed, so
-   it's not a memory loss compared with not calling the routine.
-   If memory allocation fails returns the input list unmodified.
-
-   Input:    SPHERE  *spheres   Array of spheres
-   I/O:      int     *Natom     Length of input and output sphere lists
-   Returns:  SPHERE  *          Updated sphere list
-
-   28.03.94 Original    By: ACRM
-   29.03.94 Modified such that any atom which overlaps the slab will
-            be included when OVERLAP_SLAB is defined
-*/
-SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
-{
-   SPHERE *spl;
-   int    i,
-          NOut;
-   REAL   SlabMin,
-          SlabMax;
-
-   /* Allocate memory for new sphere list                               */
-   if((spl = (SPHERE *)malloc(*Natom * sizeof(SPHERE)))==NULL)
-      return(spheres);
-
-   /* Calculate bounds of the slab                                      */
-   SlabMin = gSlab.z - gSlab.depth/(REAL)2.0;
-   SlabMax = gSlab.z + gSlab.depth/(REAL)2.0;
-
-   /* Copy spheres within slab                                          */
-   for(i=0, NOut=0; i<(*Natom); i++)
-   {
-#ifdef OVERLAP_SLAB
-      REAL zmin = (spheres[i].z - spheres[i].rad),
-           zmax = (spheres[i].z + spheres[i].rad);
-
-      if((zmax >= SlabMin && zmax <= SlabMax) ||
-         (zmin >= SlabMin && zmin <= SlabMax) ||
-         (zmin <= SlabMin && zmax >= SlabMax))
-#else
-      if(spheres[i].z >= SlabMin && spheres[i].z <= SlabMax)
-#endif
-      {
-         spl[NOut] = spheres[i];
-         NOut++;
-      }
-   }
-
-   *Natom = NOut;
-   return(spl);
 }
 

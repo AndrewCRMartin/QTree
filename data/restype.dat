@@ -1,0 +1,11 @@
+residue lys 0.0 0.0 1.0
+residue arg 0.0 0.0 1.0
+residue glu 1.0 0.0 0.0
+residue asp 1.0 0.0 0.0
+residue cys 1.0 1.0 0.0
+residue phe 1.0 0.0 1.0
+residue tyr 1.0 0.0 1.0
+residue trp 1.0 0.0 1.0
+background 1.0 1.0 0.0 1.0 0.0 0.0
+slab A35 CA 2.0
+spec

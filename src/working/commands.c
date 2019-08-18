@@ -3,11 +3,11 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V1.12
-   Date:       12.12.94
+   Version:    V1.2
+   Date:       29.07.93
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -53,18 +53,6 @@
    V1.0  19.07.93 Original
    V1.1  28.07.93 Added support for ball and stick
    V1.2  29.07.93 Added MTV file output support and background colouring
-   V1.3           Skipped
-   V1.4           Skipped
-   V1.5  14.09.93 Added sphere scaling option
-   V1.6  04.01.94 Skipped
-   V1.7  24.03.94 Added SLAB option and warning messages.
-                  Removed ParseResSpec() as this is now in the library
-   V1.8  09.05.94 Skipped
-   V1.9  13.05.94 Skipped
-   V1.10 24.06.94 Default colouring may now be done on temperature
-                  factor using command TEMPERATURE
-   V1.11 04.10.94 Skipped
-   V1.12 21.12.94 Skipped
 
 *************************************************************************/
 /* Includes
@@ -114,15 +102,14 @@
 #define COM_XMATRIX           13
 #define COM_LIGHT             14
 #define COM_BACKGRND          15
-#define COM_SPHSCALE          16
-#define COM_SLAB              17
-#define COM_TEMP              18
-#define PARSER_NCOMM          19
+#define PARSER_NCOMM          16
+
 
 /************************************************************************/
 KeyWd sKeyWords[PARSER_NCOMM];         /* Parser keywords               */
 char  *sStrParam[PARSER_MAXSTRPARAM];  /* Parser string parameters      */
 REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
+
 
 /************************************************************************/
 /*>BOOL SetupParser(void)
@@ -130,10 +117,7 @@ REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
    Set up the command parser
    21.07.93 Original    By: ACRM
    22.07.93 Added Rotate, matrix, and centre/center
-   23.07.93 Added light & background
-   14.09.93 Added spherescale
-   24.03.94 Added SLAB
-   24.06.94 Added TEMPERATURE
+   23.07.93 Added light & exit
 */
 BOOL SetupParser(void)
 {
@@ -170,9 +154,6 @@ BOOL SetupParser(void)
    MAKEKEY(sKeyWords[COM_XMATRIX],  "XMATRIX",     NUMBER,9);
    MAKEKEY(sKeyWords[COM_LIGHT],    "LIGHT",       NUMBER,3);
    MAKEKEY(sKeyWords[COM_BACKGRND], "BACKGROUND",  NUMBER,6);
-   MAKEKEY(sKeyWords[COM_SPHSCALE], "SPHERESCALE", NUMBER,1);
-   MAKEKEY(sKeyWords[COM_SLAB],     "SLAB",        STRING,3);
-   MAKEKEY(sKeyWords[COM_TEMP],     "TEMPERATURE", NUMBER,0);
    
    /* Check all allocations OK                                          */
    for(i=0; i<PARSER_NCOMM; i++)
@@ -196,10 +177,6 @@ BOOL SetupParser(void)
    23.07.93 Added ReportError; added light & exit
    29.07.93 Added background support
    03.08.93 Corrected call to ApplyMatrixPDB to RotatePDB
-   14.09.93 Added spherescale
-   24.03.94 Added SLAB
-   24.06.94 Added TEMPERATURE colouring. SetDefault() now has a different
-            set of parameters
 */
 void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                    BOOL ReportError)
@@ -207,16 +184,13 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
    FILE  *fp = NULL;
    char  buffer[160],
          CentreRes[16],
-         CentreAtom[8],
-         SlabRes[16],
-         SlabAtom[8];
+         CentreAtom[8];
    int   key,
          i, j;
    REAL  DefaultRGB[3],
          matrix[3][3];
    BOOL  SetDefault   = FALSE,
-         SetCentre    = FALSE,
-         ColourByTemp = FALSE;
+         SetCentre    = FALSE;
    
    /* Default spheres to white                                          */
    for(i=0; i<3; i++)
@@ -236,7 +210,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
       {
          TERMINATE(buffer);
          
-         key = parse(buffer,PARSER_NCOMM,sKeyWords,sRealParam,sStrParam);
+         key = parse(buffer, PARSER_NCOMM, sKeyWords, sRealParam, sStrParam);
          
          switch(key)
          {
@@ -319,30 +293,15 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
             DoBackground(sRealParam[0],sRealParam[1],sRealParam[2],
                          sRealParam[3],sRealParam[4],sRealParam[5]);
             break;
-         case COM_SPHSCALE:
-            gSphScale = sRealParam[0];
-            break;
-         case COM_SLAB:
-            strcpy(SlabRes,sStrParam[0]);
-            strcpy(SlabAtom,sStrParam[1]);
-            sscanf(sStrParam[2],"%lf",&(gSlab.depth));
-            gSlab.flag = TRUE;
-            break;
-         case COM_TEMP:
-            SetDefault   = TRUE;
-            ColourByTemp = TRUE;
-            break;
          default:
             break;
          }
       }
       
       if(SetDefault)
-         DoDefault(spheres,NSphere,DefaultRGB,pdb,ColourByTemp);
+         DoDefault(spheres,NSphere,DefaultRGB);
       if(SetCentre)
          DoCentre(pdb,CentreRes,CentreAtom);
-      if(gSlab.flag)
-         DoSlab(pdb,SlabRes,SlabAtom);
    }
    else
    {
@@ -351,66 +310,23 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
 }
 
 /************************************************************************/
-/*>void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3], 
-                  PDB *pdb, BOOL ColourByTemp)
+/*>void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3])
    ---------------------------------------------------------
    Set the default colour for atoms which have not otherwise been 
    coloured.
    21.07.93 Original    By: ACRM
-   24.06.94 Modified to handle colour by temperature factor
-            pdb and ColourByTemp parameters added
 */
-void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3],
-               PDB *pdb, BOOL ColourByTemp)
+void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3])
 {
-   int  i;
-   PDB  *p;
-   REAL colour, 
-        MinBVal, 
-        MaxBVal;
+   int i;
    
-   if(ColourByTemp)
+   for(i=0; i<NSphere; i++)
    {
-      /* Find min and max BVal                                          */
-      MinBVal = MaxBVal = pdb->bval;
-      for(p=pdb; p!=NULL; NEXT(p))
+      if(!spheres[i].set)
       {
-         if(p->bval > MaxBVal) MaxBVal = p->bval;
-         if(p->bval < MinBVal) MinBVal = p->bval;
-      }
-         
-      for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
-      {
-         if(!spheres[i].set)
-         {
-            /* Convert the BVal to a value between 0.0 and 1.0          */
-            colour = (p->bval - MinBVal)/(MaxBVal - MinBVal);
-
-            /* Since HSL has 0.0 == red, we convert this to a sensible
-               hue to give colours from blue...green...red
-            */
-            colour = (REAL)2.0*((REAL)1.0 - colour)/(REAL)3.0;
-
-            /* Calculate equivalent RGB colours                         */
-            HSL2RGB(colour,1.0,1.0,&(RGB[0]),&(RGB[1]),&(RGB[2]));
-            
-            /* Set the colour of the sphere                             */
-            spheres[i].r = RGB[0];
-            spheres[i].g = RGB[1];
-            spheres[i].b = RGB[2];
-         }
-      }
-   }
-   else
-   {
-      for(i=0; i<NSphere; i++)
-      {
-         if(!spheres[i].set)
-         {
-            spheres[i].r = RGB[0];
-            spheres[i].g = RGB[1];
-            spheres[i].b = RGB[2];
-         }
+         spheres[i].r = RGB[0];
+         spheres[i].g = RGB[1];
+         spheres[i].b = RGB[2];
       }
    }
 }
@@ -431,6 +347,8 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
       spheres[i].metallic = metallic;
    }
 }
+
+
 
 /************************************************************************/
 /*>void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
@@ -498,6 +416,53 @@ void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start,
          break;
       }
    }
+}
+
+/************************************************************************/
+/*>void ParseResSpec(char *spec, char *chain, int *resnum, char *insert)
+   ---------------------------------------------------------------------
+   Splits up a residue specification of the form 
+         [c]num[i]
+   into chain, resnum and insert. Chain and insert are optional and will
+   be set to spaces if not specified.
+   
+   21.07.93 Original    By: ACRM
+*/
+void ParseResSpec(char *spec, char *chain, int *resnum, char *insert)
+{
+   char  *ptr,
+         *ptr2;
+
+   UPPER(spec);   
+   KILLLEADSPACES(ptr, spec);
+     
+   /* Extract chain from spec                                           */
+   if(isdigit(*ptr))
+   {
+      /* Spec started with a digit, so no chain specified               */
+      *chain = ' ';
+   }
+   else
+   {
+      /* Chain was specified                                            */
+      *chain = *ptr;
+      ptr++;
+   }
+   
+   /* Extract insert from spec                                          */
+   *insert = ' ';
+   for(ptr2 = ptr; *ptr2; ptr2++)
+   {
+      if(!isdigit(*ptr2))
+      {
+         *insert = *ptr2;
+         *ptr2   = '\0';
+         break;
+      }
+   }
+   
+   /* Extract residue number from spec                                  */
+   sscanf(ptr,"%d",resnum);
 }
 
 /************************************************************************/
@@ -596,6 +561,7 @@ void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam,
          spheres[i].set = TRUE;
       }
    }
+   
 }
 
 /************************************************************************/
@@ -623,7 +589,7 @@ void DoRotate(PDB *pdb, char *direction, char *amount)
    Parse a residue spec and centre the display on the specified atom in
    this residue.
    23.07.93 Original    By: ACRM
-   28.03.94 Added warning if atom not found
+   
 */
 void DoCentre(PDB *pdb, char *resspec, char *atom)
 {
@@ -631,7 +597,6 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
          insert;
    int   resnum;
    PDB   *p;
-   BOOL  found = FALSE;
    
    /* Parse the residue specification                                   */
    ParseResSpec(resspec, &chain, &resnum, &insert);
@@ -648,9 +613,6 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
          p->insert[0] == insert &&
          p->chain[0]  == chain)
       {
-         /* Residue found; set flag                                     */
-         found = TRUE;
-
          /* If we've got the correct atom, set midpoint and return      */
          if(!strcmp(p->atnam,atom))
          {
@@ -673,11 +635,8 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
          }
       }
    }
-
-   /* If residue not found, issue warning                               */
-   if(!found)
-      printf("Warning: Residue for centre of display not found.\n");
 }
+
 
 /************************************************************************/
 /*>void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
@@ -700,157 +659,4 @@ void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
       for(x=0; x<gScreen[0]; x++)
          SetAbsPixel(x,y,r,g,b);
    }
-}
-
-/************************************************************************/
-/*>void DoSlab(PDB *pdb, char *resspec, char *atom)
-   ------------------------------------------------
-   Parse a residue spec and set coords to centre the slab wedge
-   24.03.94 Original (based on DoCentre())    By: ACRM
-   28.03.94 Changed check on atom name to use strncmp()
-            Added warning if not found.
-*/
-void DoSlab(PDB *pdb, char *resspec, char *atom)
-{
-   char  chain,
-         insert;
-   int   resnum;
-   PDB   *p;
-   BOOL  found = FALSE;
-   
-   /* Parse the residue specification                                   */
-   ParseResSpec(resspec, &chain, &resnum, &insert);
-   
-   /* Tidy up atom specification                                        */
-   UPPER(atom);
-   padterm(atom,4);
-
-   /* Walk the pdb linked list                                          */
-   for(p=pdb;p!=NULL;NEXT(p))
-   {
-      /* Check we are in the correct residue                            */
-      if(p->resnum    == resnum &&
-         p->insert[0] == insert &&
-         p->chain[0]  == chain)
-      {
-         /* Residue found; set flag                                     */
-         found = TRUE;
-
-         /* If we've got the correct atom, set midpoint and return      */
-         if(!strncmp(p->atnam,atom,4))
-         {
-            gSlab.z = p->z;
-            
-            return;
-         }
-         
-         /* If it's the CA, record coords; this will be over-ridden by
-            the requested atom if found, since we don't return from this
-            part
-         */
-         if(!strcmp(p->atnam,"CA  "))
-         {
-            gSlab.z = p->z;
-         }
-      }
-   }
-
-   /* If not found residue, print warning                               */
-   if(!found)
-      printf("Warning: Residue for centre of slab not found.\n");
-}
-
-/************************************************************************/
-/*>void HSL2RGB(REAL hue, REAL saturation, REAL luminance,
-                REAL *red, REAL *green, REAL *blue)
-   -------------------------------------------------------
-   Input:   REAL  hue            HSL hue value (0.0--1.0)
-            REAL  saturation     HSL saturation value (0.0--1.0)
-            REAL  luminance      HSL luminance value (0.0--1.0)
-   Output:  REAL  *red           RGB red value (0.0--1.0)
-            REAL  *green         RGB green value (0.0--1.0)
-            REAL  *blue          RGB blue value (0.0--1.0)
-
-   Converts an HSL colour value to an RGB colour value
-   Loosely based on code by R.J. Mical from Book 1 of the Amiga 
-   Programmers' Suite.
-
-   Although the code has been completely re-written here is his
-   copyright notice:
-
-   Copyright (C) 1986, 1987, Robert J. Mical All Rights Reserved.  
-
-   Any or all of this code can be used in any program as long as this
-   entire copyright notice is retained, ok?  Thanks.
-
-   The Amiga Programmer's Suite Book 1 is copyrighted but freely
-   distributable.  All copyright notices and all file headers must be
-   retained intact.
-
-   The Amiga Programmer's Suite Book 1 may be compiled and assembled,
-   and the resultant object code may be included in any software
-   product.  However, no portion of the source listings or
-   documentation of the Amiga Programmer's Suite Book 1 may be
-   distributed or sold for profit or in a for-profit product without
-   the written authorization of the author, RJ Mical.
-
-
-   24.06.94 Original    By: ACRM
-*/
-void HSL2RGB(REAL hue, REAL saturation, REAL luminance,
-             REAL *red, REAL *green, REAL *blue)
-{
-   REAL rising, falling, InvSat;
-   int  sixth;
-   
-   /* Find which sixth of the hue spectrum we are in                    */
-   sixth   = (int)((REAL)6.0 * hue);
-
-   rising  = (hue - ((REAL)sixth / (REAL)6.0)) * (REAL)6.0;
-   falling = (REAL)1.0 - rising;
-
-   InvSat  = (REAL)1.0 - saturation;
-
-   switch(sixth)
-   {
-   case 0:
-   case 6:
-      *red   = (REAL)1.0;
-      *green = rising;
-      *blue  = (REAL)0.0;
-      break;
-   case 1:
-      *red   = falling;
-      *green = (REAL)1.0;
-      *blue  = (REAL)0.0;
-      break;
-   case 2:
-      *red   = (REAL)0.0;
-      *green = (REAL)1.0;
-      *blue  = rising;
-      break;
-   case 3:
-      *red   = (REAL)0.0;
-      *green = falling;
-      *blue  = (REAL)1.0;
-      break;
-   case 4:
-      *red   = rising;
-      *green = (REAL)0.0;
-      *blue  = (REAL)1.0;
-      break;
-   case 5:
-      *red   = (REAL)1.0;
-      *green = (REAL)0.0;
-      *blue  = falling;
-      break;
-   }
-
-   *red   *= luminance;
-   *green *= luminance;
-   *blue  *= luminance;
-
-   *red   += ((luminance-(*red))   * InvSat);
-   *green += ((luminance-(*green)) * InvSat);
-   *blue  += ((luminance-(*blue))  * InvSat);
 }

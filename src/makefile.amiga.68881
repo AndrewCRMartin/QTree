@@ -1,6 +1,6 @@
 CC     = sc
-COPT   = STRICT ANSI MATH=S OPT IGNORE=149 IGNORE=304
-LOPT   = LIB lib:scm.lib lib:sc.lib lib:amiga.lib LINK
+COPT   = STRICT ANSI MATH=8 OPT IGNORE=149 IGNORE=304
+LOPT   = LIB lib:scm881.lib lib:sc.lib lib:amiga.lib LINK
 OFILES = qtree.o graphics.o commands.o 
 LFILES = bioplib/RotPDB.o bioplib/ReadPDB.o bioplib/help.o \
 bioplib/matrix.o bioplib/parse.o bioplib/general.o \

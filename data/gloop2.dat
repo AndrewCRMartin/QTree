@@ -1,0 +1,19 @@
+!  QTree data file for Gloop2 giving view of ACS.
+!  23.09.93 Original    By: ACRM
+!
+!  This file may be used with:
+!  gl2mod.pdb, gl2p21x14.pdb and gl2p1.pdb
+!
+scale 0.9
+!  Cross matrix from MoG
+xmatrix .9038 .2707 -.3316 -.3295 -.0544 -.9426 -.2732 .9611 .0401
+!  Rotate by 180 degrees to put lght chain on the left
+rotate z 180
+background 0.0 1.0 1.0 0.0 0.0 1.0
+zone 24 34 1.0 1.0 0.0     ! L1  Yellow
+zone 50 56 0.0 0.0 1.0     ! L2  Blue  
+zone 89 97 1.0 0.0 0.0     ! L3  Red
+zone 135 139 0.0 1.0 0.0   ! H1  Green
+zone 154 163 0.0 1.0 1.0   ! H2  Cyan   
+zone 203 206 1.0 0.0 1.0   ! H3  Magenta
+spec

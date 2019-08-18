@@ -1,0 +1,12 @@
+!  QTree file to generate picture of Gloop2 highlighting the coupled
+!  27/34 mutation in CDR-H1
+!  Used with gl2p21x14.pdb
+!  
+zone 128 138 0.0 1.0 1.0   ! H1  Cyan
+zone 154 163 0.0 1.0 0.0   ! H2  Green
+zone 131 131 1.0 0.0 0.0   ! H1 residue 27
+zone 138 138 0.0 0.0 1.0   ! H1 residue 34
+scale 3
+centre 131 ce1
+xmatrix .9659 -0.183 -0.183 0.0 0.7071 -0.7071 0.2588 0.6830 0.6830
+

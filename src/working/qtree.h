@@ -3,11 +3,11 @@
    Program:    QTree
    File:       qtree.h
    
-   Version:    V1.12
-   Date:       21.12.94
+   Version:    V1.0
+   Date:       19.07.93
    Function:   Include file for QTree
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -47,27 +47,13 @@
 
    Notes:
    ======
-   SPEC, DEPTHCUE, OVERLAP_SLAB and SHOW_INFO may be defined for 
-   conditional compilation of additional features.
+   SPEC, DEPTHCUE and SHOW_INFO may be defined for conditional compilation
+   of additional features.
 
 **************************************************************************
 
    Revision History:
    =================
-   V1.0  19.07.93 Original
-   V1.1           Skipped
-   V1.2           Skipped
-   V1.3           Skipped
-   V1.4           Skipped
-   V1.5  14.09.93 Added gSphScale
-   V1.6           Skipped
-   V1.7  28.03.94 Added Slab
-   V1.8  09.05.94 Skipped
-   V1.9  13.05.94 Skipped
-   V1.10 24.06.94 Handles TEMPERATURE (Changes in commands.c)
-   V1.11 04.10.94 Skipped
-   V1.12 21.12.94 Skipped
-
 
 *************************************************************************/
 
@@ -86,8 +72,6 @@
 #define DEPTHCUE        /* Handle depth cueing                          */
 #define SPEC            /* Handle specular reflections                  */
 #define SHOW_INFO       /* Show program statistics                      */
-#define OVERLAP_SLAB    /* Slabs will include any atom which overlaps the
-                           slab region                                  */
 
 /************************************************************************/
 /* Defines
@@ -126,36 +110,25 @@ typedef struct
          contrast;
 }  DCUE;
 
-typedef struct
-{
-    REAL z,
-         depth;
-    BOOL flag;
-}   SLAB;
-
 /************************************************************************/
 /* Global variables
 */
 #ifdef MAIN    /*---------------- Main program definitions -------------*/
 LIGHT gLight;              /* The light                                 */
 DCUE  gDepthCue;           /* Depthcue info                             */
-REAL  gScale     = 0.9,    /* Scaling factor                            */
-      gSphScale  = 1.0;    /* Sphere scaling factor                     */
+REAL  gScale     = 0.9;    /* Scaling factor                            */
 VEC3F gMidPoint;           /* Mid point of structure for centering      */
 char  gOutFile[160];       /* Output file name                          */
 int   gSize = SIZE,        /* Display size                              */
       gScreen[2];          /* Screen size                               */
-SLAB  gSlab;               /* Slabbing                                  */
 #else          /*----------------------- Externals ---------------------*/
 extern LIGHT gLight;
 extern DCUE  gDepthCue;
-extern REAL  gScale,
-             gSphScale;
+extern REAL  gScale;
 extern VEC3F gMidPoint;
 extern char  gOutFile[160];
 extern int   gSize,
              gScreen[2];
-extern SLAB  gSlab;
 #endif         /*-------------------------------------------------------*/
 
 
