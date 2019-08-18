@@ -3,34 +3,44 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V1.12
-   Date:       12.12.94
+   Version:    V2.1b
+   Date:       08.02.96
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993-6
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
                Ashtead,
                Surrey,
                KT21 2TD.
-   Phone:      +44 (0372) 275775
-   EMail:      UUCP:  cbmehq!cbmuk!scitec!amartin
-                      amartin@scitec.adsp.sub.org
-               JANET: andrew@uk.ac.ox.biop
+   Phone:      +44 (0) 1372 275775
+   EMail:      martin@biochem.ucl.ac.uk
                
 **************************************************************************
 
-   This program is not in the public domain, but it may be freely copied
-   and distributed for no charge providing this header is included.
-   The code may be modified as required, but any modifications must be
-   documented so that the person responsible can be identified. If someone
-   else breaks this code, I don't want to be blamed for code that does not
-   work! The code may not be sold commercially without prior permission 
-   from the author, although it may be given away free with commercial 
-   products, providing it is made clear that this program is free and that 
-   the source code is provided with the program.
+   This program is not in the public domain.
 
+   It may not be copied or made available to third parties, but may be
+   freely used by non-profit-making organisations who have obtained it
+   directly from the author or by FTP.
+   
+   You are requested to send EMail to the author to say that you are
+   using this code so that you may be informed of future updates.
+   
+   The code may not be made available on other FTP sites without express
+   permission from the author.
+   
+   The code may be modified as required, but any modifications must be
+   documented so that the person responsible can be identified. If
+   someone else breaks this code, the author doesn't want to be blamed
+   for code that does not work! You may not distribute any
+   modifications, but are encouraged to send them to the author so
+   that they may be incorporated into future versions of the code.
+   
+   The code may not be sold commercially or used for commercial purposes
+   without prior permission from the author.
+                                                
 **************************************************************************
 
    Description:
@@ -65,6 +75,15 @@
                   factor using command TEMPERATURE
    V1.11 04.10.94 Skipped
    V1.12 21.12.94 Skipped
+   V2.0  28.03.95 Fixed DoZone() which wasn't working properly for
+                  Ball and Stick images which split the PDB data into
+                  two sections.
+   V2.1  23.10.95 Errors and warnings got to stderr
+   V2.1a 06.12.95 Added CHAIN command for setting colour
+   V2.1b 08.02.96 Fixed bug in specifying zones. InZone() didn't
+                  correctly handle residues within a zone which had
+                  insertion codes
+   V2.1c 18.06.96 Changed InZone() to InPDBZone() and moved to bioplib
 
 *************************************************************************/
 /* Includes
@@ -117,12 +136,14 @@
 #define COM_SPHSCALE          16
 #define COM_SLAB              17
 #define COM_TEMP              18
-#define PARSER_NCOMM          19
+#define COM_CHAIN             19
+#define PARSER_NCOMM          20
 
 /************************************************************************/
 KeyWd sKeyWords[PARSER_NCOMM];         /* Parser keywords               */
 char  *sStrParam[PARSER_MAXSTRPARAM];  /* Parser string parameters      */
 REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
+
 
 /************************************************************************/
 /*>BOOL SetupParser(void)
@@ -134,6 +155,7 @@ REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
    14.09.93 Added spherescale
    24.03.94 Added SLAB
    24.06.94 Added TEMPERATURE
+   06.12.95 Added CHAIN
 */
 BOOL SetupParser(void)
 {
@@ -173,6 +195,7 @@ BOOL SetupParser(void)
    MAKEKEY(sKeyWords[COM_SPHSCALE], "SPHERESCALE", NUMBER,1);
    MAKEKEY(sKeyWords[COM_SLAB],     "SLAB",        STRING,3);
    MAKEKEY(sKeyWords[COM_TEMP],     "TEMPERATURE", NUMBER,0);
+   MAKEKEY(sKeyWords[COM_CHAIN],    "CHAIN",       STRING,4);
    
    /* Check all allocations OK                                          */
    for(i=0; i<PARSER_NCOMM; i++)
@@ -183,6 +206,7 @@ BOOL SetupParser(void)
    
    return(TRUE);
 }
+
 
 /************************************************************************/
 /*>void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
@@ -200,6 +224,8 @@ BOOL SetupParser(void)
    24.03.94 Added SLAB
    24.06.94 Added TEMPERATURE colouring. SetDefault() now has a different
             set of parameters
+   23.10.95 Changed error messages to go to stderr
+   06.12.95 Added CHAIN
 */
 void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                    BOOL ReportError)
@@ -227,7 +253,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
       if((fp=fopen(file,"r")) == NULL)
       {
          if(ReportError)
-            printf("Unable to open control file: %s\n",file);
+            fprintf(stderr,"Unable to open control file: %s\n",file);
 
          return;
       }
@@ -242,7 +268,7 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
          {
          case PARSE_ERRC:
          case PARSE_ERRP:
-            printf("Error in command file line:\n%s\n",buffer);
+            fprintf(stderr,"Error in command file line:\n%s\n",buffer);
             break;
          case COM_ZONE:
             DoZone(spheres,pdb,NSphere,sStrParam[0],sStrParam[1],
@@ -332,6 +358,11 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
             SetDefault   = TRUE;
             ColourByTemp = TRUE;
             break;
+         case COM_CHAIN:
+            DoChain(spheres,pdb,NSphere,sStrParam[0],sStrParam[1],
+                    sStrParam[2],sStrParam[3]);
+            SetDefault = TRUE;
+            break;
          default:
             break;
          }
@@ -346,9 +377,10 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
    }
    else
    {
-      printf("Unable to set up parser\n");
+      fprintf(stderr,"Unable to set up parser\n");
    }
 }
+
 
 /************************************************************************/
 /*>void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3], 
@@ -415,6 +447,7 @@ void DoDefault(SPHERE *spheres, int NSphere, REAL RGB[3],
    }
 }
 
+
 /************************************************************************/
 /*>void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
    ---------------------------------------------------------------------
@@ -432,6 +465,7 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
    }
 }
 
+
 /************************************************************************/
 /*>void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
                char *end, char *red, char *green, char *blue)
@@ -439,6 +473,9 @@ void DoPhong(SPHERE *spheres, int NSphere, REAL shine, REAL metallic)
    Set colours of spheres based on zone information.
    
    21.07.93 Original    By: ACRM
+   29.03.95 Modified to work correctly with b&s images where the 
+            appropriate zone occurs in two parts
+   18.06.96 Changed InZone() to InPDBZone()
 */
 void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start, 
             char *end, char *red, char *green, char *blue)
@@ -461,95 +498,7 @@ void DoZone(SPHERE *spheres, PDB *pdb, int NSphere, char *start,
    
    for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
    {
-      if(p->chain[0]  == chain1   &&
-         p->resnum    == resnum1  &&
-         p->insert[0] == insert1)
-      {
-         /* Start found, step through to end                            */
-         for(; p!=NULL && i<NSphere; NEXT(p), i++)
-         {
-            if(p->chain[0]  == chain2   &&
-               p->resnum    == resnum2  &&
-               p->insert[0] == insert2)
-               break;
-            spheres[i].r   = r;
-            spheres[i].g   = g;
-            spheres[i].b   = b;
-            spheres[i].set = TRUE;
-         }
-         
-         /* Check for abnormal ending                                   */
-         if(p==NULL || i>=NSphere) break;
-         
-         /* Step through the end residue                                */
-         for(; p!=NULL && i<NSphere; NEXT(p), i++)
-         {
-            if(p->chain[0]  != chain2   ||
-               p->resnum    != resnum2  ||
-               p->insert[0] != insert2)
-               break;
-            spheres[i].r   = r;
-            spheres[i].g   = g;
-            spheres[i].b   = b;
-            spheres[i].set = TRUE;
-         }
-         
-         /* This zone finished so break out                             */
-         break;
-      }
-   }
-}
-
-/************************************************************************/
-/*>void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
-               char *red, char *green, char *blue)
-   ---------------------------------------------------------------
-   Set colours of spheres based on atom information. Handles * as wild
-   card and ' is translated to a * for use in PDB files
-   
-   21.07.93 Original    By: ACRM
-   22.07.93 Padded atom name to 4 chars
-*/
-void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
-            char *red, char *green, char *blue)
-{
-   int      i,
-            NComp = 4;  /* Normally compare all 4 chars of atom name    */
-   PDB      *p;
-   char     *ptr;
-   double   r, g, b;
-   
-   sscanf(red,   "%lf",&r);
-   sscanf(green, "%lf",&g);
-   sscanf(blue,  "%lf",&b);
-   
-   UPPER(atom);
-   
-   /* See if there is a wild card in the atom spec                      */
-   if((ptr = strchr(atom,'*')) != NULL)
-   {
-      *ptr = '\0';
-      NComp = strlen(atom);   /* Compare fewer characters               */
-      
-      if(NComp == 0) NComp = 4;
-   }
-   else
-   {
-      /* No *, pad atom to 4 chars. N.B. We assume atom is large enough
-         to handle this!
-      */
-      padterm(atom,4);
-   }
-   
-   /* Change a ' to a * for comparison                                  */
-   if((ptr = strchr(atom,'\'')) != NULL)
-   {
-      *ptr = '*';
-   }
-   
-   for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
-   {
-      if(!strncmp(p->atnam,atom,NComp))
+      if(InPDBZone(p, chain1, resnum1, insert1, resnum2, insert2))
       {
          spheres[i].r   = r;
          spheres[i].g   = g;
@@ -559,14 +508,16 @@ void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom,
    }
 }
 
+
 /************************************************************************/
-/*>void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *type, 
+/*>void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam, 
                   char *red, char *green, char *blue)
-   ------------------------------------------------------------------
+   --------------------------------------------------------------------
    Set colours of spheres based on residue information. 
    
    21.07.93 Original    By: ACRM
    22.07.93 Padded residue name to 4 chars
+   06.12.95 Corrected comments
 */
 void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam, 
                char *red, char *green, char *blue)
@@ -581,7 +532,7 @@ void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam,
 
    UPPER(resnam);
 
-   /* Pad residue name to 4 chars. N.B. We assume atom is large enough
+   /* Pad residue name to 4 chars. N.B. We assume resnam is large enough
       to handle this!
    */
    padterm(resnam,4);
@@ -597,6 +548,7 @@ void DoResidue(SPHERE *spheres, PDB *pdb, int NSphere, char *resnam,
       }
    }
 }
+
 
 /************************************************************************/
 /*>void DoRotate(PDB *pdb, char *direction, char *amount)
@@ -617,6 +569,7 @@ void DoRotate(PDB *pdb, char *direction, char *amount)
    RotatePDB(pdb, matrix);
 }
 
+
 /************************************************************************/
 /*>void DoCentre(PDB *pdb, char *resspec, char *atom)
    --------------------------------------------------
@@ -624,6 +577,7 @@ void DoRotate(PDB *pdb, char *direction, char *amount)
    this residue.
    23.07.93 Original    By: ACRM
    28.03.94 Added warning if atom not found
+   23.10.95 Warnings go to stderr
 */
 void DoCentre(PDB *pdb, char *resspec, char *atom)
 {
@@ -676,8 +630,9 @@ void DoCentre(PDB *pdb, char *resspec, char *atom)
 
    /* If residue not found, issue warning                               */
    if(!found)
-      printf("Warning: Residue for centre of display not found.\n");
+      fprintf(stderr,"Warning: Residue for centre of display not found.\n");
 }
+
 
 /************************************************************************/
 /*>void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
@@ -702,6 +657,7 @@ void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
    }
 }
 
+
 /************************************************************************/
 /*>void DoSlab(PDB *pdb, char *resspec, char *atom)
    ------------------------------------------------
@@ -709,6 +665,7 @@ void DoBackground(REAL r1, REAL g1, REAL b1, REAL r2, REAL g2, REAL b2)
    24.03.94 Original (based on DoCentre())    By: ACRM
    28.03.94 Changed check on atom name to use strncmp()
             Added warning if not found.
+   23.10.95 Warnings go to stderr
 */
 void DoSlab(PDB *pdb, char *resspec, char *atom)
 {
@@ -757,8 +714,9 @@ void DoSlab(PDB *pdb, char *resspec, char *atom)
 
    /* If not found residue, print warning                               */
    if(!found)
-      printf("Warning: Residue for centre of slab not found.\n");
+      fprintf(stderr,"Warning: Residue for centre of slab not found.\n");
 }
+
 
 /************************************************************************/
 /*>void HSL2RGB(REAL hue, REAL saturation, REAL luminance,
@@ -854,3 +812,98 @@ void HSL2RGB(REAL hue, REAL saturation, REAL luminance,
    *green += ((luminance-(*green)) * InvSat);
    *blue  += ((luminance-(*blue))  * InvSat);
 }
+
+
+/************************************************************************/
+/*>void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain,
+                char *red, char *green, char *blue)
+   ------------------------------------------------------------------
+   Set colours of spheres based on chain name.
+   
+   06.12.95 Original    By: ACRM
+*/
+void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain, 
+             char *red, char *green, char *blue)
+{
+   int      i;
+   PDB      *p;
+   double   r, g, b;
+   
+   sscanf(red,   "%lf",&r);
+   sscanf(green, "%lf",&g);
+   sscanf(blue,  "%lf",&b);
+
+   UPPER(chain);
+
+   for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
+   {
+      if(p->chain[0] == chain[0])
+      {
+         spheres[i].r   = r;
+         spheres[i].g   = g;
+         spheres[i].b   = b;
+         spheres[i].set = TRUE;
+      }
+   }
+}
+
+/************************************************************************/
+/*>void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
+               char *red, char *green, char *blue)
+   ---------------------------------------------------------------
+   Set colours of spheres based on atom information. Handles * as wild
+   card and ' is translated to a * for use in PDB files
+   
+   21.07.93 Original    By: ACRM
+   22.07.93 Padded atom name to 4 chars
+*/
+void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
+            char *red, char *green, char *blue)
+{
+   int      i,
+            NComp = 4;  /* Normally compare all 4 chars of atom name    */
+   PDB      *p;
+   char     *ptr;
+   double   r, g, b;
+   
+   sscanf(red,   "%lf",&r);
+   sscanf(green, "%lf",&g);
+   sscanf(blue,  "%lf",&b);
+   
+   UPPER(atom);
+   
+   /* See if there is a wild card in the atom spec                      */
+   if((ptr = strchr(atom,'*')) != NULL)
+   {
+      *ptr = '\0';
+      NComp = strlen(atom);   /* Compare fewer characters               */
+      
+      if(NComp == 0) NComp = 4;
+   }
+   else
+   {
+      /* No *, pad atom to 4 chars. N.B. We assume atom is large enough
+         to handle this!
+      */
+      padterm(atom,4);
+   }
+   
+   /* Change a ' to a * for comparison                                  */
+   if((ptr = strchr(atom,'\'')) != NULL)
+   {
+      *ptr = '*';
+   }
+   
+   for(p=pdb, i=0; p!=NULL && i<NSphere; NEXT(p), i++)
+   {
+      if(!strncmp(p->atnam,atom,NComp))
+      {
+         spheres[i].r   = r;
+         spheres[i].g   = g;
+         spheres[i].b   = b;
+         spheres[i].set = TRUE;
+      }
+   }
+}
+
+

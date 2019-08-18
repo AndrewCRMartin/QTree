@@ -3,34 +3,44 @@
    Program:    QTree
    File:       qtree.h
    
-   Version:    V1.12
-   Date:       21.12.94
+   Version:    V2.1
+   Date:       23.10.95
    Function:   Include file for QTree
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993-5
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
                Ashtead,
                Surrey,
                KT21 2TD.
-   Phone:      +44 (0372) 275775
-   EMail:      UUCP:  cbmehq!cbmuk!scitec!amartin
-                      amartin@scitec.adsp.sub.org
-               JANET: andrew@uk.ac.ox.biop
+   Phone:      +44 (0) 1372 275775
+   EMail:      UUCP:  martin@biochem.ucl.ac.uk
                
 **************************************************************************
 
-   This program is not in the public domain, but it may be freely copied
-   and distributed for no charge providing this header is included.
-   The code may be modified as required, but any modifications must be
-   documented so that the person responsible can be identified. If someone
-   else breaks this code, I don't want to be blamed for code that does not
-   work! The code may not be sold commercially without prior permission 
-   from the author, although it may be given away free with commercial 
-   products, providing it is made clear that this program is free and that 
-   the source code is provided with the program.
+   This program is not in the public domain.
 
+   It may not be copied or made available to third parties, but may be
+   freely used by non-profit-making organisations who have obtained it
+   directly from the author or by FTP.
+   
+   You are requested to send EMail to the author to say that you are
+   using this code so that you may be informed of future updates.
+   
+   The code may not be made available on other FTP sites without express
+   permission from the author.
+   
+   The code may be modified as required, but any modifications must be
+   documented so that the person responsible can be identified. If
+   someone else breaks this code, the author doesn't want to be blamed
+   for code that does not work! You may not distribute any
+   modifications, but are encouraged to send them to the author so
+   that they may be incorporated into future versions of the code.
+   
+   The code may not be sold commercially or used for commercial purposes
+   without prior permission from the author.
+                                                
 **************************************************************************
 
    Description:
@@ -67,6 +77,8 @@
    V1.10 24.06.94 Handles TEMPERATURE (Changes in commands.c)
    V1.11 04.10.94 Skipped
    V1.12 21.12.94 Skipped
+   V2.0  30.03.95 Skipped
+   V2.1  23.10.95 Skipped
 
 
 *************************************************************************/

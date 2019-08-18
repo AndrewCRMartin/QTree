@@ -17,11 +17,14 @@
    
    In its simplest form, you simply need to enter the command:
    
-         QTree <file.pdb> <file.mtv>
+         QTree [<file.pdb> [<file.mtv>]]
          
    This will use the default atom colouring (Carbon: white, Oxygen: red, 
    Nitrogen: blue, Sulphur: yellow, Hydrogen: grey, Others: green) and 
    fill the screen with the image.
+
+   If filenames are not specified, the program will expect a PDB file
+   on standard input and will write the image to standard output.
 
    The output file specified on the commands line is a 24bit graphics 
    file in the simple format used by the MTV raytracer. This may be
@@ -46,11 +49,21 @@
    line which specifies the parameters required for this run. This is 
    done using the form:
    
-         QTree -c <control.dat> <file.pdb> <file.mtv>
+         QTree -c <control.dat> [<file.pdb> [<file.mtv>]]
          
    The control file or qtree.def contains free format commands which may 
    be in mixed case and may be abbreviated or commented out using an 
    exclamation mark (!).
+
+   When specifying colours using the control file, the commands are 
+   processed in the order specified. Therefore, you must give commands
+   with more global effects before more specific commands. For example,
+   the CHAIN command (to specify a colour for a whole chain) must be
+   specified before a RESIDUE command (to specify the colour of a 
+   particular residue type) which must be specified before a ZONE
+   command (to specfy the colour of a particular zone of residues).
+   Reversing the order would end up with the CHAIN command cancelling
+   the effect of the more specific commands.
    
    This help information describes the available commands. The commands 
    are handled in turn and over-ride the effect of previous commands.
@@ -78,7 +91,8 @@
    
    Specifies the colour to be used for an atom type. A wild card (*) may 
    be used after the first character such that C* represents all carbon 
-   atoms.
+   atoms. A prime character (') is used to match a * in the PDB atom
+   code (e.g. in DNA structures with atoms like C1*).
    
    r, g and b specify the colour to be used with values between 0.0 and 
    1.0 being valid for each of the red, green and blue parameters.
@@ -89,6 +103,16 @@
    RESIDUE restype r g b
 
    Specifies the colour to be used for a residue type. 
+   
+   r, g and b specify the colour to be used with values between 0.0 and 
+   1.0 being valid for each of the red, green and blue parameters.
+#CHAIN
+
+
+
+   CHAIN chain r g b
+
+   Specifies the colour to be used for a given chain. 
    
    r, g and b specify the colour to be used with values between 0.0 and 
    1.0 being valid for each of the red, green and blue parameters.
@@ -249,4 +273,3 @@
    behaviour to be modified.)
    
    If the requested atom is not found, the C-alpha will be used.
-

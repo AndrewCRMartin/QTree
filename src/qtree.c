@@ -3,34 +3,44 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V1.12a
-   Date:       21.12.94
+   Version:    V2.1c
+   Date:       18.06.96
    Function:   Use quad-tree algorithm to display a molecule
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993-6
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
                Ashtead,
                Surrey,
                KT21 2TD.
-   Phone:      +44 (0372) 275775
-   EMail:      UUCP:  cbmehq!cbmuk!scitec!amartin
-                      amartin@scitec.adsp.sub.org
-               JANET: andrew@uk.ac.ox.biop
+   Phone:      +44 (0) 1372 275775
+   EMail:      martin@biochem.ucl.ac.uk
                
 **************************************************************************
 
-   This program is not in the public domain, but it may be freely copied
-   and distributed for no charge providing this header is included.
-   The code may be modified as required, but any modifications must be
-   documented so that the person responsible can be identified. If someone
-   else breaks this code, I don't want to be blamed for code that does not
-   work! The code may not be sold commercially without prior permission 
-   from the author, although it may be given away free with commercial 
-   products, providing it is made clear that this program is free and that 
-   the source code is provided with the program.
+   This program is not in the public domain.
 
+   It may not be copied or made available to third parties, but may be
+   freely used by non-profit-making organisations who have obtained it
+   directly from the author or by FTP.
+   
+   You are requested to send EMail to the author to say that you are
+   using this code so that you may be informed of future updates.
+   
+   The code may not be made available on other FTP sites without express
+   permission from the author.
+   
+   The code may be modified as required, but any modifications must be
+   documented so that the person responsible can be identified. If
+   someone else breaks this code, the author doesn't want to be blamed
+   for code that does not work! You may not distribute any
+   modifications, but are encouraged to send them to the author so
+   that they may be incorporated into future versions of the code.
+   
+   The code may not be sold commercially or used for commercial purposes
+   without prior permission from the author.
+                                                
 **************************************************************************
 
    Description:
@@ -85,6 +95,13 @@
    V1.11 04.10.94 With -b, reads radii from occ rather than bval
    V1.12 21.12.94 Improved Usage message
    V1.12a21.12.94 Fixed Usage text for -b
+   V2.0  28.03.95 Modified to allow I/O through pipes
+                  Ctrl-C handled properly for non-AmigaDOS systems
+   V2.1  23.10.95 Changes in commands.c to send warnings and errors to
+                  stderr
+   V2.1a 06.12.95 Added CHAIN command
+   V2.1b 08.02.96 Fixed bug when handling inserts within zones
+   V2.1c 18.06.96 Moved InZone() into bioplib as InPDBZone()
 
 *************************************************************************/
 /* Includes
@@ -98,6 +115,8 @@
 
 #ifdef _AMIGA
 #include <dos.h>
+#else
+#include <signal.h>   /* If you don't have signal.h, it's no great loss */
 #endif
 
 #include "bioplib/macros.h"
@@ -108,7 +127,6 @@
 
 #define MAIN
 #include "qtree.h"
-
 
 /************************************************************************/
 /* Defines
@@ -137,12 +155,13 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: QTree V1.12a - SciTech Software, 1993-4";
+   *sVers="\0$VER: QTree V2.1c - SciTech Software, 1993-6";
 #endif
 
+
 /************************************************************************/
-/*>main(int argc, char **argv)
-   ---------------------------
+/*>int main(int argc, char **argv)
+   -------------------------------
    Main routine for the quad tree PDB space filling program
    
    19.07.93 Original    By: ACRM
@@ -164,18 +183,26 @@ static unsigned char
    04.10.94 Calls ReadPDBAll() if it's ball & stick, so all occupancy
             atoms are read (radius is now stored in occ rather then
             in bval).
+   28.03.95 Moved screen text to stderr.
+            Added Quiet handling and stdio I/O
+   23.10.95 V2.1
+   06.12.95 V2.1a
+   08.02.96 V2.1b
+   18.02.96 V2.1c
 */
-main(int argc, char **argv)
+int main(int argc, char **argv)
 {
    PDB      *pdb           = NULL;
    FILE     *fp            = NULL;
    SPHERE   *spheres       = NULL;
    BOOL     DoControl      = FALSE,
             OK             = TRUE,
-            DoResolution   = FALSE;
+            DoResolution   = FALSE,
+            Quiet          = FALSE;
    int      NAtom          = 0,
             resolution     = 0;
-   char     ControlFile[160];
+   char     ControlFile[160],
+            InFile[160];
             
 #ifdef SHOW_INFO
    clock_t  StartTime,
@@ -184,10 +211,8 @@ main(int argc, char **argv)
    StartTime = clock();
 #endif
 
-#ifdef _AMIGA
    /* Establish a NULL CTRL-C trap                                      */
    onbreak(&CtrlCNoExit);
-#endif
    
 #ifdef DEPTHCUE
    /* Set default depth cueing parameter                                */
@@ -216,169 +241,145 @@ main(int argc, char **argv)
    gSlab.z     = 0.0;
    gSlab.depth = 1000.0;
 
-   /* Parse the command line                                            */
-   argc--;  argv++;
-   
-   while(argc && argv[0][0] == '-')
+   if(ParseCmdLine(argc, argv, InFile, gOutFile, &DoControl, ControlFile,
+                   &sBallStick, &DoResolution, &resolution, &Quiet,
+                   &(gScreen[0]), &(gScreen[1])))
    {
-      switch(argv[0][1])
+      /* If the resolution flag has been set, calculate the resolution  */
+      if(DoResolution)
       {
-      case 'c':
-      case 'C':
-         argc--;  argv++;
-         DoControl = TRUE;
-         strcpy(ControlFile,argv[0]);
-         break;
-      case 'h':
-      case 'H':
-         UsageExit(TRUE);
-         break;
-      case 'b':
-      case 'B':
-         sBallStick = TRUE;
-         break;
-      case 'r':
-      case 'R':
-         argc--;  argv++;
-         sscanf(argv[0],"%d",&resolution);
-         DoResolution = TRUE;
-         break;
-      case 's':
-      case 'S':
-         argc--;  argv++;
-         sscanf(argv[0],"%d",&(gScreen[0]));
-         argc--;  argv++;
-         sscanf(argv[0],"%d",&(gScreen[1]));
-         break;
-      default:
-         break;
+         int size;
+         
+         size = MIN(gScreen[0],gScreen[1]);
+         if(resolution > size) resolution = size;
+         
+         /* Ensure size a power of 2                                    */
+         for(gSize = 2; gSize<resolution; gSize*=2);
+         if(gSize > resolution) gSize /= 2;
       }
       
-      argc--;  argv++;
-   }
-
-   if(argc != 2)
-      UsageExit(FALSE);
-
-   /* Copy in name of output filename                                   */
-   strcpy(gOutFile,argv[1]);
-
-   /* If the resolution flag has been set, calculate the resolution     */
-   if(DoResolution)
-   {
-      int size;
+      /* Make sure gSize is OK (if screen size specified, but not res   */
+      while(gSize > MIN(gScreen[0],gScreen[1]))
+         gSize /= 2;
       
-      size = MIN(gScreen[0],gScreen[1]);
-      if(resolution > size) resolution = size;
-
-      /* Ensure size a power of 2                                       */
-      for(gSize = 2; gSize<resolution; gSize*=2);
-      if(gSize > resolution) gSize /= 2;
+      /* Set up default lighting condition                              */
+      gLight.x    = (REAL)gSize*2;
+      gLight.y    = (REAL)gSize*2;
+      gLight.z    = (REAL)gSize*5;
+      gLight.amb  = 0.3;
+      gLight.spec = FALSE;
       
-   }
-
-   /* Make sure gSize is OK (if screen size specified, but not res      */
-   while(gSize > MIN(gScreen[0],gScreen[1]))
-      gSize /= 2;
-
-   /* Set up default lighting condition                                 */
-   gLight.x    = (REAL)gSize*2;
-   gLight.y    = (REAL)gSize*2;
-   gLight.z    = (REAL)gSize*5;
-   gLight.amb  = 0.3;
-   gLight.spec = FALSE;
-   
-   /* Banner message                                                    */
-   printf("\nQTree V1.12a\n");
-   printf("===========\n");
-   printf("CPK program for PDB files. SciTech Software\n");
-   printf("Copyright (C) 1993-4 SciTech Software. All Rights Reserved.\n");
-   printf("This program is freely distributable providing no profit is \
-made in so doing.\n\n");
-   printf("Rendering...");
-      
-   /* Open file for reading                                             */
-   if((fp=fopen(argv[0],"r")) == NULL)
-   {
-      printf("Unable to read file: %s\n",argv[0]);
-      exit(0);
-   }
-
-   if(InitGraphics())
-   {
-      /* Read the PDB file                                              */
-      if(sBallStick)
-         pdb = ReadPDBAll(fp, &NAtom);
-      else
-         pdb = ReadPDB(fp, &NAtom);
-      
-      if(pdb != NULL)
+      /* Banner message                                                 */
+      if(!Quiet)
       {
-         /* Convert to sphere list                                      */
-         if((spheres = CreateSphereList(pdb, NAtom)) != NULL)
-         {
-            /* Handle control file if specified                         */
-            if(DoControl) 
-               HandleControl(ControlFile, pdb, spheres, NAtom, TRUE);
-            else
-               HandleControl(DEF_CONTROL, pdb, spheres, NAtom, FALSE);
+         fprintf(stderr,"\nQTree V2.1c\n");
+         fprintf(stderr,"=========== \n");
+         fprintf(stderr,"CPK program for PDB files. SciTech Software\n");
+         fprintf(stderr,"Copyright (C) 1993-6 SciTech Software. All \
+Rights Reserved.\n");
+         fprintf(stderr,"This program is freely distributable providing \
+no profit is made in so doing.\n\n");
+         fprintf(stderr,"Rendering...");
+      }
       
-            /* Set and scale coords in sphere list                      */
-            MapSpheres(pdb, spheres, NAtom);
-
-	    /* Remove spheres outside slab range                        */
-            if(gSlab.flag)
-		spheres = SlabSphereList(spheres, &NAtom);
-	    
-            /* Free memory of PDB linked list                           */
-            FREELIST(pdb, PDB);
-            pdb = NULL;
-            
-            /* Run the space fill                                       */
-            if(!SpaceFill(spheres, NAtom))
+      /* Open file for reading (Modified for V2.0)                      */
+      if(InFile[0])
+      {
+         if((fp=fopen(InFile,"r")) == NULL)
+         {
+            fprintf(stderr,"Unable to read file: %s\n",InFile);
+            exit(1);
+         }
+      }
+      else
+      {
+         fp = stdin;
+      }
+      
+      if(InitGraphics())
+      {
+         /* Read the PDB file                                           */
+         if(sBallStick)
+            pdb = ReadPDBAll(fp, &NAtom);
+         else
+            pdb = ReadPDB(fp, &NAtom);
+         
+         if(pdb != NULL)
+         {
+            /* Convert to sphere list                                   */
+            if((spheres = CreateSphereList(pdb, NAtom)) != NULL)
             {
-               printf("Memory allocation failed or Ctrl-C pressed.\n");
+               /* Handle control file if specified                      */
+               if(DoControl) 
+                  HandleControl(ControlFile, pdb, spheres, NAtom, TRUE);
+               else
+                  HandleControl(DEF_CONTROL, pdb, spheres, NAtom, FALSE);
+               
+               /* Set and scale coords in sphere list                   */
+               MapSpheres(pdb, spheres, NAtom);
+               
+               /* Remove spheres outside slab range                     */
+               if(gSlab.flag)
+                  spheres = SlabSphereList(spheres, &NAtom);
+               
+               /* Free memory of PDB linked list                        */
+               FREELIST(pdb, PDB);
+               pdb = NULL;
+               
+               /* Run the space fill                                    */
+               if(!SpaceFill(spheres, NAtom))
+               {
+                  fprintf(stderr,"Memory allocation failed or Ctrl-C \
+pressed.\n");
+                  OK = FALSE;
+               }
+               
+               /* Free the allocated space                              */
+               free(spheres);
+            }
+            else
+            {
+               fprintf(stderr,"Unable to allocate memory for initial \
+sphere list.\n");
                OK = FALSE;
             }
             
-            /* Free the allocated space                                 */
-            free(spheres);
+            /* Free PDB linked list if CreateSphereList() failed        */
+            if(pdb != NULL)
+               FREELIST(pdb, PDB);
          }
          else
          {
-            printf("Unable to allocate memory for initial sphere \
-list.\n");
+            fprintf(stderr,"Unable to read atoms from PDB file.\n");
             OK = FALSE;
          }
-         
-         /* Free PDB linked list if CreateSphereList() failed           */
-         if(pdb != NULL)
-            FREELIST(pdb, PDB);
       }
-      else
+      
+      if(OK && !Quiet) 
+         fprintf(stderr,"Complete.\n");
+      
+#ifdef SHOW_INFO
+      StopTime = clock();
+#endif
+      
+      EndGraphics();
+      
+#ifdef SHOW_INFO
+      if(OK && !Quiet)
       {
-         printf("Unable to read atoms from PDB file.\n");
-         OK = FALSE;
+         fprintf(stderr,"Pixel coverage: %.3lf\n",
+                 (double)sNPixels/(double)(gSize*gSize));
+         fprintf(stderr,"CPU Time:       %.3lf seconds\n",
+                 (double)(StopTime-StartTime)/CLOCKS_PER_SEC);
       }
-   }
-   
-   if(OK) printf("Complete.\n");
-   
-#ifdef SHOW_INFO
-   StopTime = clock();
 #endif
-   
-   EndGraphics();
-   
-#ifdef SHOW_INFO
-   if(OK)
+   }
+   else
    {
-      printf("Pixel coverage: %.3lf\n",
-             (double)sNPixels/(double)(gSize*gSize));
-      printf("CPU Time:       %.3lf seconds\n",
-             (double)(StopTime-StartTime)/CLOCKS_PER_SEC);
+      UsageExit(FALSE);
    }
-#endif
+
+   return(0);  
 }
 
 
@@ -580,6 +581,7 @@ SPHERE *CreateSphereList(PDB *pdb, int NAtom)
    return(sp);
 }
 
+
 /************************************************************************/
 /*>BOOL SpaceFill(SPHERE *AllSpheres, int NSphere)
    -----------------------------------------------
@@ -604,10 +606,8 @@ BOOL SpaceFill(SPHERE *AllSpheres, int NSphere)
    /* Do a setjmp() so we can unwind from errors                        */
    setjmp(sSaveUnwind);
    
-#ifdef _AMIGA
    /* Establish a CTRL-C trap                                           */
    onbreak(&CtrlCExit);
-#endif
    
    /* sOKFlag is cleared if an error occurs during the recursive 
       splitting process and will only be set if we have returned here 
@@ -630,10 +630,8 @@ BOOL SpaceFill(SPHERE *AllSpheres, int NSphere)
       }
    }
    
-#ifdef _AMIGA
    /* Establish a NULL CTRL-C trap                                      */
    onbreak(&CtrlCNoExit);
-#endif
    
    /* Free memory                                                       */
    if(spheres != NULL)  free(spheres);
@@ -723,6 +721,7 @@ void SplitPic(int x0, int y0, int x1, int y1, SPHERE **spheres,
    }
 }
 
+
 /************************************************************************/
 /*>SPHERE **UpdateSphereList(REAL x0, REAL y0, REAL x1, REAL y1, 
                              SPHERE **spheres, int NSphere, int *NSphOut)
@@ -800,6 +799,7 @@ SPHERE **UpdateSphereList(REAL   x0,
       return(NULL);
    }
 }
+
 
 /************************************************************************/
 /*>SPHERE **SortSpheresOnX(SPHERE *AllSpheres, int NSphere)
@@ -882,6 +882,7 @@ SPHERE **SortSpheresOnX(SPHERE *AllSpheres, int NSphere)
    return(sp);
 }
 
+
 /************************************************************************/
 /*>void ColourPixel(REAL x, REAL y, SPHERE **spheres, int NSphere)
    ---------------------------------------------------------------
@@ -942,6 +943,7 @@ void ColourPixel(REAL x, REAL y, SPHERE **spheres, int NSphere)
       ShadePixel(x, y, (REAL)MaxZ, spheres[FrontSphere]);
 }
 
+
 /************************************************************************/
 /*>int FarLeftSearch(SPHERE **spheres, int NSphere, REAL x)
    --------------------------------------------------------
@@ -965,6 +967,7 @@ int FarLeftSearch(SPHERE **spheres, int NSphere, REAL x)
 
    return(-1);
 }
+
 
 /************************************************************************/
 /*>int FarRightSearch(SPHERE **spheres, int NSphere, REAL x)
@@ -991,7 +994,6 @@ int FarRightSearch(SPHERE **spheres, int NSphere, REAL x)
 }
 
 
-#ifdef _AMIGA
 /************************************************************************/
 /*>int CtrlCExit(void)
    -------------------
@@ -1007,6 +1009,7 @@ int CtrlCExit(void)
    return(0);
 }
 
+
 /************************************************************************/
 /*>int CtrlCNoExit(void)
    ---------------------
@@ -1017,6 +1020,23 @@ int CtrlCExit(void)
 int CtrlCNoExit(void)
 {
    return(0);
+}
+
+
+#ifndef _AMIGA
+/************************************************************************/
+/*>void onbreak(void *func)
+   ------------------------
+   Establish a trap for Ctrl-C under OS other than AmigaDOS.
+
+   If you're system doesn't support signal() properly, just comment out
+   the signal() call so this is a NULL routine
+
+   30.03.95 Original    By: ACRM
+*/
+void onbreak(void *func)
+{
+   signal((int)SIGINT, (void *)func);
 }
 #endif
 
@@ -1146,45 +1166,6 @@ void ShadePixel(REAL x, REAL y, REAL z, SPHERE *sphere)
    SetPixel((int)x, (int)y, rr, gg, bb);
 }
 
-/************************************************************************/
-/*>void UsageExit(BOOL ShowHelp)
-   -----------------------------
-   Print usage info and exit. If ShowHelp set, then display help file
-   if present.
-
-   21.07.93 Original (split from main())     By: ACRM
-   23.07.93 Added help file support
-   28.07.93 Added ball & stick support
-   12.08.93 Added -s option
-   21.12.94 Added Copyright/version. Corrected text for -b
-*/
-void UsageExit(BOOL ShowHelp)
-{
-   if(ShowHelp)
-   {
-      DoHelp("HELP",HELPFILE);
-      Help("Dummy","CLOSE");
-   }
-   else
-   {
-      printf("\nQTree V1.12a (c) 1993-4 Dr. Andrew C.R. Martin, SciTech \
-Software\n\n");
-      
-      printf("Usage: qtree [-b] [-c <control.dat>] [-r <n>] [-s <x> <y>] \
-<file.pdb> <file.mtv>\n");
-      printf("       qtree [-h]\n\n");
-      printf("       -b Interpret occupancy as radius for ball & stick\n");
-      printf("       -c Specify control file\n");
-      printf("       -r Specify pixel resolution (power of 2) [%d]\n",
-             SIZE);
-      printf("       -s Specify screen size [%d %d]\n",XSIZE,YSIZE);
-      printf("       -h Enter help utility\n\n");
-      printf("       Output is in MTV raytracer format\n\n");
-      printf("       Render a space filling picture of a PDB file\n");
-      printf("       Enter qtree -h to enter the help program\n");
-   }
-   exit(0);
-}
 
 /************************************************************************/
 /*>SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
@@ -1243,4 +1224,163 @@ SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
    *Natom = NOut;
    return(spl);
 }
+
+
+/************************************************************************/
+/*>BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                     BOOL *DoControl, char *ControlFile, 
+                     BOOL *DoBallStick, 
+                     BOOL *DoResolution, int *resolution, BOOL *quiet,
+                     int *screenx, int *screeny)
+   ---------------------------------------------------------------------
+   Input:   int    argc               Argument count
+            char   **argv             Argument array
+   Output:  char   *infile            Input file (or blank string)
+            char   *outfile           Output file (or blank string)
+            BOOL   *DoControl         A control file has been given
+            char   *ControlFile       Name of control file
+            BOOL   *DoBallStick       Read raidus from occ column
+            BOOL   *DoResolution      A resolution has been given
+            int    *resolution        The resolution
+            BOOL   *Quiet             Operate quietly
+            int    *screenx           X image size
+            int    *screeny           Y image size
+   Returns: BOOL                      Success?
+
+   Parse the command line
+   
+   28.03.95 Original    By: ACRM
+*/
+BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                  BOOL *DoControl, char *ControlFile, BOOL *DoBallStick, 
+                  BOOL *DoResolution, int *resolution, BOOL *quiet,
+                  int *screenx, int *screeny)
+{
+   argc--;
+   argv++;
+
+   infile[0] = outfile[0] = '\0';
+   
+   while(argc)
+   {
+      if(!strncmp(argv[0],"-help",5) ||
+         !strncmp(argv[0],"-HELP",5))
+      {
+         return(FALSE);
+      }
+      
+      if(argv[0][0] == '-')
+      {
+         switch(argv[0][1])
+         {
+         case 'c':
+         case 'C':
+            argc--;  argv++;
+            *DoControl = TRUE;
+            strcpy(ControlFile,argv[0]);
+            break;
+         case 'h':
+         case 'H':
+            UsageExit(TRUE);
+            break;
+         case 'b':
+         case 'B':
+            *DoBallStick = TRUE;
+            break;
+         case 'r':
+         case 'R':
+            argc--;  argv++;
+            sscanf(argv[0],"%d",resolution);
+            *DoResolution = TRUE;
+            break;
+         case 'q':
+         case 'Q':
+            *quiet = TRUE;
+            break;
+         case 's':
+         case 'S':
+            argc--;  argv++;
+            sscanf(argv[0],"%d",screenx);
+            argc--;  argv++;
+            sscanf(argv[0],"%d",screeny);
+            break;
+         default:
+            return(FALSE);
+            break;
+         }
+      }
+      else
+      {
+         /* Check that there are only 1 or 2 arguments left             */
+         if(argc > 2)
+            return(FALSE);
+         
+         /* Copy the first to infile                                    */
+         strcpy(infile, argv[0]);
+         
+         /* If there's another, copy it to outfile                      */
+         argc--;
+         argv++;
+         if(argc)
+            strcpy(outfile, argv[0]);
+            
+         return(TRUE);
+      }
+      argc--;
+      argv++;
+   }
+   
+   return(TRUE);
+}
+
+
+/************************************************************************/
+/*>void UsageExit(BOOL ShowHelp)
+   -----------------------------
+   Print usage info and exit. If ShowHelp set, then display help file
+   if present.
+
+   21.07.93 Original (split from main())     By: ACRM
+   23.07.93 Added help file support
+   28.07.93 Added ball & stick support
+   12.08.93 Added -s option
+   21.12.94 Added Copyright/version. Corrected text for -b
+   28.03.95 Changed to stderr and added -q
+   23.10.95 V2.1
+   06.12.95 V2.1a
+   08.02.96 V2.1b
+   18.06.96 V2.1c
+*/
+void UsageExit(BOOL ShowHelp)
+{
+   if(ShowHelp)
+   {
+      DoHelp("HELP",HELPFILE);
+      Help("Dummy","CLOSE");
+   }
+   else
+   {
+      fprintf(stderr,"\nQTree V2.1c (c) 1993-6 Dr. Andrew C.R. Martin, \
+SciTech Software\n\n");
+      
+      fprintf(stderr,"Usage: qtree [-q] [-b] [-c <control.dat>] [-r <n>] \
+[-s <x> <y>] [<file.pdb> [<file.mtv>]]\n");
+      fprintf(stderr,"       qtree [-h]\n\n");
+      fprintf(stderr,"       -q Operate quietly\n");
+      fprintf(stderr,"       -b Interpret occupancy as radius for ball \
+& stick\n");
+      fprintf(stderr,"       -c Specify control file\n");
+      fprintf(stderr,"       -r Specify pixel resolution (power of 2) \
+[%d]\n", SIZE);
+      fprintf(stderr,"       -s Specify screen size [%d %d]\n",
+             XSIZE,YSIZE);
+      fprintf(stderr,"       -h Enter help utility\n\n");
+      fprintf(stderr,"       Output is in MTV raytracer format\n\n");
+      fprintf(stderr,"       Render a space filling picture of a PDB \
+file\n");
+      fprintf(stderr,"       Enter qtree -h to enter the help program\n");
+   }
+   exit(0);
+}
+
 

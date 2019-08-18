@@ -3,34 +3,44 @@
    Program:    BallStick
    File:       BallStick.c
    
-   Version:    V1.12
-   Date:       21.12.94
+   Version:    V2.1c
+   Date:       30.06.98
    Function:   Preprocessor for QTree to create a Ball & Stick image
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993-8
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
                Ashtead,
                Surrey,
                KT21 2TD.
-   Phone:      +44 (0372) 275775
-   EMail:      UUCP:  cbmehq!cbmuk!scitec!amartin
-                      amartin@scitec.adsp.sub.org
-               JANET: andrew@uk.ac.ox.biop
+   Phone:      +44 (0) 1372 275775
+   EMail:      martin@biochem.ucl.ac.uk
                
 **************************************************************************
 
-   This program is not in the public domain, but it may be freely copied
-   and distributed for no charge providing this header is included.
-   The code may be modified as required, but any modifications must be
-   documented so that the person responsible can be identified. If someone
-   else breaks this code, I don't want to be blamed for code that does not
-   work! The code may not be sold commercially without prior permission 
-   from the author, although it may be given away free with commercial 
-   products, providing it is made clear that this program is free and that 
-   the source code is provided with the program.
+   This program is not in the public domain.
 
+   It may not be copied or made available to third parties, but may be
+   freely used by non-profit-making organisations who have obtained it
+   directly from the author or by FTP.
+   
+   You are requested to send EMail to the author to say that you are
+   using this code so that you may be informed of future updates.
+   
+   The code may not be made available on other FTP sites without express
+   permission from the author.
+   
+   The code may be modified as required, but any modifications must be
+   documented so that the person responsible can be identified. If
+   someone else breaks this code, the author doesn't want to be blamed
+   for code that does not work! You may not distribute any
+   modifications, but are encouraged to send them to the author so
+   that they may be incorporated into future versions of the code.
+   
+   The code may not be sold commercially or used for commercial purposes
+   without prior permission from the author.
+                                                
 **************************************************************************
 
    Description:
@@ -67,6 +77,13 @@
    V1.10 24.06.94 Skipped
    V1.11 04.10.94 Sphere size now in occ rather than BVal
    V1.12 21.12.94 Improved Usage message
+   V2.0  28.03.95 Supports stdio
+   V2.1  23.10.95 Skipped
+   V2.1a 18.09.97 Added command line option to set the maximum distance
+                  between atoms to count as a bond
+   V2.1b 30.09.97 Tidied for clean compile under gcc
+   V2.1c 30.06.98 If -m is specified this now also applies to between-
+                  residue links
 
 *************************************************************************/
 /* Includes
@@ -79,18 +96,24 @@
 #include "bioplib/SysDefs.h"
 #include "bioplib/pdb.h"
 #include "bioplib/macros.h"
+#include "bioplib/general.h"
 
 /************************************************************************/
 /* Variables global to this file only
 */
-static int sTotalCAlpha = 0;
-static PDB *sStickArray = NULL;
+static PDB *sStickArray   = NULL;
+static REAL gMaxBondLenSq = (REAL)4.0;
+static BOOL gMaxSpecified = FALSE;
 
 /************************************************************************/
+/* Defines
+*/
+#define MAXBUFF 160
+
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: BallStick V1.12 - SciTech Software, \
-1993-4";
+static unsigned char *sVers="\0$VER: BallStick V2.1c - SciTech Software, \
+1993-8";
 #endif
 
 /************************************************************************/
@@ -100,6 +123,9 @@ int main(int argc, char **argv);
 long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
                      BOOL Disulphides);
 void WriteBalls(FILE *out, PDB *sStickArray, int NDivide);
+BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                  int *NDivide, REAL *BallRad, REAL *StickRad, 
+                  BOOL *Disulphides, BOOL *Quiet);
 void UsageExit(void);
 
 /************************************************************************/
@@ -110,11 +136,16 @@ void UsageExit(void);
    28.07.93 Original    By: ACRM
    29.07.93 Added disulphide flag
    04.10.94 Writes to occ rather than bval
+   28.03.95 Modified to support stdio. Now calls ParseCmdLine() and
+            OpenStdFiles(). Text goes to stderr
+   23.10.95 V2.1
+   30.09.97 V2.1b
+   30.06.98 V2.1c
 */
 int main(int argc, char **argv)
 {
-   FILE     *in      = NULL,
-            *out     = NULL;
+   FILE     *in      = stdin,
+            *out     = stdout;
    PDB      *pdb,
             *p;
    int      natom,
@@ -122,103 +153,69 @@ int main(int argc, char **argv)
    long int TotalOut = 0;
    REAL     BallRad  = 0.4,
             StickRad = 0.2;
-   BOOL     Disulphides = TRUE;
+   BOOL     Disulphides = TRUE,
+            Quiet       = FALSE;
+   char     infile[MAXBUFF],
+            outfile[MAXBUFF];
 
-   /* Parse command line arguments                                      */
-   argc--;  argv++;
-   
-   while(argc > 2)
+   if(ParseCmdLine(argc, argv, infile, outfile, &NDivide, &BallRad,
+                   &StickRad, &Disulphides, &Quiet))
    {
-      if(argv[0][0] != '-') break;
-      
-      switch(argv[0][1])
+      if(OpenStdFiles(infile, outfile, &in, &out))
       {
-      case 'n':
-      case 'N':
-         argc--;  argv++;
-         sscanf(argv[0],"%d",&NDivide);
-         if(NDivide%2) NDivide++;         /* Round to multiple of 2     */
-         break;
-      case 'b':
-      case 'B':
-         argc--; argv++;
-         sscanf(argv[0],"%lf",&BallRad);
-         break;
-      case 's':
-      case 'S':
-         argc--; argv++;
-         sscanf(argv[0],"%lf",&StickRad);
-         break;
-      case 'd':
-      case 'D':
-         Disulphides = FALSE;
-         break;
-      default:
-         UsageExit();
-         break;
-      }
-      
-      argc--;  argv++;
-   }
+         /* Banner message                                              */
+         if(!Quiet)
+         {
+            fprintf(stderr,"\nBallStick V2.1c\n");
+            fprintf(stderr,"===============\n");
+            fprintf(stderr,"Ball and Stick program for use with QTree. \
+SciTech Software\n");
+            fprintf(stderr,"Copyright (C) 1993-8 SciTech Software. All \
+Rights Reserved.\n");
+            fprintf(stderr,"This program is freely distributable \
+providing no profit is made in so doing.\n\n");
+         }
+
+         /* Read PDB file                                               */
+         pdb = ReadPDB(in, &natom);
+         TotalOut = natom;
          
-   /* Error in command line                                             */
-   if(argc != 2)
+         if(pdb != NULL)
+         {
+            /* Allocate memory for stick array                          */
+            if((sStickArray = (PDB *)malloc(NDivide * sizeof(PDB))) == 
+               NULL)
+            {
+               fprintf(stderr,"No memory for stick array\n");
+               exit(0);
+            }
+            
+            /* V1.11 Sets occup rather than B-val                       */
+            /* Set the occup of all atoms to the ball radius            */
+            for(p=pdb; p!=NULL; NEXT(p))
+               p->occ = BallRad;
+            
+            /* Re-write the current atom information                    */
+            WritePDB(out,pdb);
+            
+            /* Write the stick information                              */
+            TotalOut += WriteSticks(out,pdb,NDivide,StickRad,Disulphides);
+            
+            /* Print information                                        */
+            if(!Quiet)
+            {
+               fprintf(stderr,"Input atoms  = %d\n",natom);
+               fprintf(stderr,"Output atoms = %ld\n",TotalOut);
+            }
+         }
+      }
+   }
+   else
    {
       UsageExit();
    }
 
-   /* Open input and output files                                       */
-   if((in = fopen(*argv,"r")) == NULL)
-   {
-      printf("Unable to open input file %s\n",*argv);
-      exit(0);
-   }
-   argv++;
-
-   if((out = fopen(*argv,"w")) == NULL)
-   {
-      printf("Unable to open output file %s\n",*argv);
-      exit(0);
-   }
-   
-   /* Banner message                                                    */
-   printf("\nBallStick V1.12\n");
-   printf("===============\n");
-   printf("Ball and Stick program for use with QTree. \
-SciTech Software\n");
-   printf("Copyright (C) 1993-4 SciTech Software. All Rights \
-Reserved.\n");
-   printf("This program is freely distributable providing no profit is \
-made in so doing.\n\n");
-
-   /* Read PDB file                                                     */
-   pdb = ReadPDB(in, &natom);
-   TotalOut = natom;
-   
-   if(pdb != NULL)
-   {
-      /* Allocate memory for stick array                                */
-      if((sStickArray = (PDB *)malloc(NDivide * sizeof(PDB))) == NULL)
-      {
-         printf("No memory for stick array\n");
-         exit(0);
-      }
-      
-      /* V1.11 Sets occup rather than B-val                             */
-      /* Set the occup of all atoms to the ball radius                  */
-      for(p=pdb; p!=NULL; NEXT(p))
-         p->occ = BallRad;
-         
-      /* Re-write the current atom information                          */
-      WritePDB(out,pdb);
-      
-      /* Write the stick information                                    */
-      TotalOut += WriteSticks(out,pdb,NDivide,StickRad,Disulphides);
-      
-      /* Print information                                              */
-      printf("Input atoms  = %d\n",natom);
-      printf("Output atoms = %d\n",TotalOut);
-   }
+   return(0);
 }
 
 /************************************************************************/
@@ -229,6 +226,7 @@ made in so doing.\n\n");
    28.07.93 Original    By: ACRM
    29.07.93 Added disulphide support
    04.10.94 Stores in occ rather than Bval
+   18.09.97 Max bond length in gMaxBondSq rather than hard coded
 */
 long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
                      BOOL Disulphides)
@@ -255,7 +253,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
       {
          for(q=p->next; q!=end; NEXT(q))
          {
-            if(DIST(p,q) < 2.0)
+            if(DISTSQ(p,q) < gMaxBondLenSq)
             {
                xstep = (q->x - p->x) / NDivide;
                ystep = (q->y - p->y) / NDivide;
@@ -296,29 +294,31 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
             if(!strncmp(q->atnam,"N   ",4) || 
                !strncmp(q->atnam,"P   ",4))
             {
-               xstep = (q->x - p->x) / NDivide;
-               ystep = (q->y - p->y) / NDivide;
-               zstep = (q->z - p->z) / NDivide;
-               
-               for(i=0;i<NDivide;i++)
+               if(!gMaxSpecified || (DISTSQ(p,q) < gMaxBondLenSq))
                {
-                  /* Copy PDB information from parent atom              */
-                  CopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
+                  xstep = (q->x - p->x) / NDivide;
+                  ystep = (q->y - p->y) / NDivide;
+                  zstep = (q->z - p->z) / NDivide;
                   
-                  /* V1.11 occ rather than bval                         */
-                  /* Set radius                                         */
-                  sStickArray[i].occ = StickRad;
+                  for(i=0;i<NDivide;i++)
+                  {
+                     /* Copy PDB information from parent atom           */
+                     CopyPDB(&(sStickArray[i]),(i<HalfNDiv?p:q));
+                     
+                     /* V1.11 occ rather than bval                      */
+                     /* Set radius                                      */
+                     sStickArray[i].occ = StickRad;
+                     
+                     /* Set coords                                      */
+                     sStickArray[i].x = p->x + i * xstep;
+                     sStickArray[i].y = p->y + i * ystep;
+                     sStickArray[i].z = p->z + i * zstep;
+                  }
                   
-                  /* Set coords                                         */
-                  sStickArray[i].x = p->x + i * xstep;
-                  sStickArray[i].y = p->y + i * ystep;
-                  sStickArray[i].z = p->z + i * zstep;
+                  NBall += NDivide;
+                  
+                  WriteBalls(out, sStickArray, NDivide);
                }
-                           
-               NBall += NDivide;
-
-               WriteBalls(out, sStickArray, NDivide);
-
                p = q;
                break;
             }
@@ -386,8 +386,8 @@ void WriteBalls(FILE *fp, PDB *balls, int nballs)
    
    for(i=0; i<nballs; i++)
    {
-      fprintf(fp,"%-6s%5d  %-4s%-4s%1s%4d%1s   %8.3lf%8.3lf%8.3lf\
-%6.2lf%6.2lf\n",
+      fprintf(fp,"%-6s%5d  %-4s%-4s%1s%4d%1s   %8.3f%8.3f%8.3f\
+%6.2f%6.2f\n",
               balls[i].junk,
               balls[i].atnum,
               balls[i].atnam,
@@ -403,26 +403,143 @@ void WriteBalls(FILE *fp, PDB *balls, int nballs)
    }
 }
 
+
+/************************************************************************/
+/*>BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                     int *NDivide, REAL *BallRad, REAL *StickRad, 
+                     BOOL *Disulphides, BOOL *Quiet)
+   ---------------------------------------------------------------------
+   Input:   int    argc         Argument count
+            char   **argv       Argument array
+   Output:  char   *infile      Input file (or blank string)
+            char   *outfile     Output file (or blank string)
+            int    *NDivide     Number of divisions
+            REAL   *BallRad     Ball radius
+            REAL   *StickRad    Stick radius
+            BOOL   *Disulphides Do disulphides
+            BOOL   *Quiet       Operate quietly
+   Returns: BOOL                Success?
+
+   Parse the command line
+   
+   28.03.95 Original    By: ACRM
+   18.09.97 Added -m to specify max bond length. Added checks on sscanf()
+            returns
+*/
+BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                  int *NDivide, REAL *BallRad, REAL *StickRad, 
+                  BOOL *Disulphides, BOOL *Quiet)
+{
+   argc--;
+   argv++;
+
+   infile[0] = outfile[0] = '\0';
+   
+   while(argc)
+   {
+      if(argv[0][0] == '-')
+      {
+         switch(argv[0][1])
+         {
+         case 'n':
+         case 'N':
+            argc--;  argv++;
+            if(!sscanf(argv[0],"%d",NDivide))
+               return(FALSE);
+            if((*NDivide)%2) (*NDivide)++;  /* Round to multiple of 2   */
+            break;
+         case 'b':
+         case 'B':
+            argc--; argv++;
+            if(!sscanf(argv[0],"%lf",BallRad))
+               return(FALSE);
+            break;
+         case 's':
+         case 'S':
+            argc--; argv++;
+            if(!sscanf(argv[0],"%lf",StickRad))
+               return(FALSE);
+            break;
+         case 'd':
+         case 'D':
+            *Disulphides = FALSE;
+            break;
+         case 'q':
+         case 'Q':
+            *Quiet = TRUE;
+            break;
+         case 'm':
+         case 'M':
+            argc--; argv++;
+            if(!sscanf(argv[0],"%lf",&gMaxBondLenSq))
+               return(FALSE);
+            gMaxBondLenSq *= gMaxBondLenSq;
+            gMaxSpecified = TRUE;
+            break;
+         default:
+            return(FALSE);
+            break;
+         }
+      }
+      else
+      {
+         /* Check that there are only 1 or 2 arguments left             */
+         if(argc > 2)
+            return(FALSE);
+         
+         /* Copy the first to infile                                    */
+         strcpy(infile, argv[0]);
+         
+         /* If there's another, copy it to outfile                      */
+         argc--;
+         argv++;
+         if(argc)
+            strcpy(outfile, argv[0]);
+            
+         return(TRUE);
+      }
+      argc--;
+      argv++;
+   }
+   
+   return(TRUE);
+}
+
+
 /************************************************************************/
 /*>void UsageExit(void)
    --------------------
    Give usage message and exit
    29.07.93 Original extracted from main()   By: ACRM
    21.12.94 Added Copyright/version message
+   28.03.95 V2.0 Uses stderr
+   23.10.95 V2.1
+   18.09.97 V2.1a Added -m
+   30.09.97 V2.1b
+   30.06.98 V2.1c -m now also applies to between residue links
 */
 void UsageExit(void)
 {
-   printf("\nBallStick V1.12 (c) 1993-4 Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\nBallStick V2.1c (c) 1993-8 Dr. Andrew C.R. Martin, \
 SciTech Software\n\n");
    
-   printf("Usage: BallStick [-n <n>] [-b <r>] [-s <r>] [-d] <in.pdb> \
-<out.pdb>\n");
-   printf("       -n Specify the number of spheres to be placed \
+   fprintf(stderr,"Usage: BallStick [-q] [-n <n>] [-b <r>] [-s <r>] [-d] \
+[-m <d>] [<in.pdb> [<out.pdb>]]\n");
+   fprintf(stderr,"       -q Operate quietly\n");
+   fprintf(stderr,"       -n Specify the number of spheres to be placed \
 between atoms [30]\n");
-   printf("       -b Specify ball radius [0.4]\n");
-   printf("       -s Specify stick radius [0.2]\n");
-   printf("       -d Don't do disulphides\n");
-   printf("\nCreates a set of spheres between each atom pair.\n");
+   fprintf(stderr,"       -b Specify ball radius [0.4]\n");
+   fprintf(stderr,"       -s Specify stick radius [0.2]\n");
+   fprintf(stderr,"       -d Don't do disulphides\n");
+   fprintf(stderr,"       -m Specify maximum distance between bonded \
+atoms\n");
+   fprintf(stderr,"          By default this is 2.0A within a residue \
+and unlimited\n");
+   fprintf(stderr,"          between residues. -m sets a limit for \
+both\n");
+
+   fprintf(stderr,"\nCreates a set of spheres between each atom pair.\n");
 
    exit(0);
 }
+

@@ -3,34 +3,44 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V1.12
-   Date:       21.12.94
+   Version:    V2.1 
+   Date:       23.10.95
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993-4
+   Copyright:  (c) SciTech Software 1993-5
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
                Ashtead,
                Surrey,
                KT21 2TD.
-   Phone:      +44 (0372) 275775
-   EMail:      UUCP:  cbmehq!cbmuk!scitec!amartin
-                      amartin@scitec.adsp.sub.org
-               JANET: andrew@uk.ac.ox.biop
+   Phone:      +44 (0) 1372 275775
+   EMail:      martin@biochem.ucl.ac.uk
                
 **************************************************************************
 
-   This program is not in the public domain, but it may be freely copied
-   and distributed for no charge providing this header is included.
-   The code may be modified as required, but any modifications must be
-   documented so that the person responsible can be identified. If someone
-   else breaks this code, I don't want to be blamed for code that does not
-   work! The code may not be sold commercially without prior permission 
-   from the author, although it may be given away free with commercial 
-   products, providing it is made clear that this program is free and 
-   that the source code is provided with the program.
+   This program is not in the public domain.
 
+   It may not be copied or made available to third parties, but may be
+   freely used by non-profit-making organisations who have obtained it
+   directly from the author or by FTP.
+   
+   You are requested to send EMail to the author to say that you are
+   using this code so that you may be informed of future updates.
+   
+   The code may not be made available on other FTP sites without express
+   permission from the author.
+   
+   The code may be modified as required, but any modifications must be
+   documented so that the person responsible can be identified. If
+   someone else breaks this code, the author doesn't want to be blamed
+   for code that does not work! You may not distribute any
+   modifications, but are encouraged to send them to the author so
+   that they may be incorporated into future versions of the code.
+   
+   The code may not be sold commercially or used for commercial purposes
+   without prior permission from the author.
+                                                
 **************************************************************************
 
    Description:
@@ -70,6 +80,8 @@
    V1.10 24.06.94 Skipped
    V1.11 04.10.94 Skipped
    V1.12 21.12.94 Improved Usage message
+   V2.0  28.03.95 Able to sue stdio
+   V2.1  23.10.95 Skipped
 
 *************************************************************************/
 /* Includes
@@ -89,10 +101,14 @@
 static int sTotalCAlpha = 0;
 
 /************************************************************************/
+/* Defines
+*/
+#define MAXBUFF 160
+
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: Worms V1.12  SciTech Software, 1993-1994";
+   *sVers="\0$VER: Worms V2.1  SciTech Software, 1993-1995";
 #endif
 
 /************************************************************************/
@@ -112,6 +128,10 @@ void BuildCA(REAL x1, REAL y1, REAL z1,
              REAL x3, REAL y3, REAL z3,
              REAL *outx, REAL *outy, REAL *outz);
 PDB *BuildCAList(PDB *pdb);
+BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                  int *DivideSmoothIter, int *NDivide, BOOL *DivSmooth, 
+                  BOOL *Quiet);
+void Usage(void);
 
 /************************************************************************/
 /*>int main(int argc, char **argv)
@@ -122,11 +142,12 @@ PDB *BuildCAList(PDB *pdb);
    28.07.93 Corrected bug in unable to open file
    11.08.93 Free's memory allocated as divide and worm
    21.12.94 Improved usage message
+   23.10.95 V2.1
 */
 int main(int argc, char **argv)
 {
-   FILE  *in      = NULL,
-         *out     = NULL;
+   FILE  *in      = stdin,
+         *out     = stdout;
    PDB   *pdb     = NULL,
          *divide  = NULL,
          *worm    = NULL;
@@ -136,138 +157,106 @@ int main(int argc, char **argv)
          DivideSmoothIter  = 4,
          NDivide           = 30,
          TotalOut          = 0;
-   BOOL  DivSmooth         = FALSE;
-
-   /* Parse command line arguments                                      */
-   argc--;  argv++;
+   BOOL  DivSmooth         = FALSE,
+         Quiet             = FALSE;
+   char  infile[MAXBUFF],
+         outfile[MAXBUFF];
    
-   while(argc > 2)
+
+   if(ParseCmdLine(argc, argv, infile, outfile, &DivideSmoothIter,
+                   &NDivide, &DivSmooth, &Quiet))
    {
-      if(argv[0][0] != '-') break;
-      
-      switch(argv[0][1])
+      if(OpenStdFiles(infile, outfile, &in, &out))
       {
-      case 's':
-      case 'S':
-         argc--;  argv++;
-         sscanf(argv[0],"%d",&DivideSmoothIter);
-         break;
-      case 'n':
-      case 'N':
-         argc--;  argv++;
-         sscanf(argv[0],"%d",&NDivide);
-         break;
-      case 'd':
-      case 'D':
-         DivSmooth = TRUE;
-      default:
-         break;
-      }
-      
-      argc--;  argv++;
-   }
+         /* Banner message                                              */
+         if(!Quiet)
+         {
+            fprintf(stderr,"\nWorms V2.1\n");
+            fprintf(stderr,"==========\n");
+            fprintf(stderr,"Worms program for use with QTree. SciTech \
+Software\n");
+            fprintf(stderr,"Copyright (C) 1993-5 SciTech Software. All \
+Rights Reserved.\n");
+            fprintf(stderr,"This program is freely distributable \
+providing no profit is made in so doing.\n\n");
+         }
+   
+         /* Read PDB file                                               */
+         pdb = ReadPDB(in, &natom);
          
-   /* Error in command line                                             */
-   if(argc != 2)
-   {
-      printf("\nWorms V1.12 (c) 1993-4 Dr. Andrew C.R. Martin, SciTech \
-Software\n\n");
-      
-      printf("Usage: worms [-n <n>] [-d] [-s <n>] <in.pdb> <out.pdb>\n");
-      printf("       -n Specify the number of spheres to be placed \
-between splined atoms [30]\n");
-      printf("       -d Use division smoothing rather than B-spline\n");
-      printf("       -s Specify the division smoothing factor [4]\n");
-      printf("\nCreates a set of spheres along the smoothed C-alpha \
-chain.\n");
-      exit(0);
-   }
-
-   /* Open input and output files                                       */
-   if((in = fopen(*argv,"r")) == NULL)
-   {
-      printf("Unable to open input file %s\n",*argv);
-      exit(0);
-   }
-   argv++;
-
-   if((out = fopen(*argv,"w")) == NULL)
-   {
-      printf("Unable to open output file %s\n",*argv);
-      exit(0);
-   }
-   
-   /* Banner message                                                    */
-   printf("\nWorms V1.12\n");
-   printf("===========\n");
-   printf("Worms program for use with QTree. SciTech Software\n");
-   printf("Copyright (C) 1993-4 SciTech Software. All Rights \
-Reserved.\n");
-   printf("This program is freely distributable providing no profit is \
-made in so doing.\n\n");
-
-   /* Read PDB file                                                     */
-   pdb = ReadPDB(in, &natom);
-   
-   if(pdb != NULL)
-   {
-      PDB   *start,
+         if(pdb != NULL)
+         {
+            PDB   *start,
             *end,
             *p;
-   
-      /* Handle each chain in turn                                      */
-      start = pdb;
-      
-      while(start != NULL)
-      {
-         end = FindChainPDB(start);
-         for(p=start; p->next != end; NEXT(p)) ;
-         p->next = NULL;
-
-         if(DivSmooth)     /* Use division smoothing                    */
-         {
-            if((divide = DivideSmoothPDB(start,DivideSmoothIter,&nsmooth))
-                         != NULL)
+            
+            /* Handle each chain in turn                                */
+            start = pdb;
+            
+            while(start != NULL)
             {
-               /* Interpolate positions between smoothed points         */
-               if((worm = InterpPDB(divide,nsmooth,NDivide,&nworm)) 
-                          != NULL)
+               end = FindChainPDB(start);
+               for(p=start; p->next != end; NEXT(p)) ;
+               p->next = NULL;
+               
+               if(DivSmooth)     /* Use division smoothing              */
                {
-                  TotalOut += nworm;
-                  WriteWorm(out, worm, nworm);
+                  if((divide = DivideSmoothPDB(start,DivideSmoothIter,
+                                               &nsmooth))
+                     != NULL)
+                  {
+                     /* Interpolate positions between smoothed points   */
+                     if((worm = InterpPDB(divide,nsmooth,NDivide,&nworm)) 
+                        != NULL)
+                     {
+                        TotalOut += nworm;
+                        WriteWorm(out, worm, nworm);
+                     }
+                  }
                }
+               else              /* Use B-spline smoothing              */
+               {
+                  if((worm = BSplineSmoothPDB(start,NDivide,&nworm))
+                     != NULL)
+                  {
+                     TotalOut += nworm;
+                     WriteWorm(out, worm, nworm);
+                  }
+               }
+               
+               if(divide != NULL)   free(divide);
+               if(worm   != NULL)   free(worm);
+               divide = NULL;
+               worm   = NULL;
+               
+               FREELIST(start, PDB);
+               
+               start = end;
             }
-         }
-         else              /* Use B-spline smoothing                    */
-         {
-            if((worm = BSplineSmoothPDB(start,NDivide,&nworm))
-                       != NULL)
+            
+            /* Print information                                        */
+            if(!Quiet)
             {
-               TotalOut += nworm;
-               WriteWorm(out, worm, nworm);
+               
+               fprintf(stderr,"Smoothing method    = %s\n",
+                       (DivSmooth?"Division":"B-spline"));
+               if(DivSmooth)
+                  fprintf(stderr,"DivideSmooth level  = %d\n",
+                          DivideSmoothIter);
+               fprintf(stderr,"Divisions           = %d\n",NDivide);
+               fprintf(stderr,"Input C-alpha atoms = %d\n",sTotalCAlpha);
+               fprintf(stderr,"Output worm atoms   = %d\n",TotalOut);
             }
          }
-
-         if(divide != NULL)   free(divide);
-         if(worm   != NULL)   free(worm);
-         divide = NULL;
-         worm   = NULL;
-
-         FREELIST(start, PDB);
-
-         start = end;
       }
-      
-      /* Print information                                              */
-      printf("Smoothing method    = %s\n",
-             (DivSmooth?"Division":"B-spline"));
-      if(DivSmooth)
-         printf("DivideSmooth level  = %d\n",DivideSmoothIter);
-      printf("Divisions           = %d\n",NDivide);
-      printf("Input C-alpha atoms = %d\n",sTotalCAlpha);
-      printf("Output worm atoms   = %d\n",TotalOut);
    }
+   else
+   {
+      Usage();
+   }
+   return(0);
 }
+
 
 /************************************************************************/
 /*>PDB *DivideSmoothPDB(PDB *pdb, int DivideSmoothIter, int *nsmooth)
@@ -851,3 +840,110 @@ PDB *BuildCAList(PDB *pdb)
    return(ca_pdb);
 }
 
+
+/************************************************************************/
+/*>BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                     int *DivideSmoothIter, int *NDivide, 
+                     BOOL *DivSmooth, BOOL *Quiet)
+   ---------------------------------------------------------------------
+   Input:   int    argc               Argument count
+            char   **argv             Argument array
+   Output:  char   *infile            Input file (or blank string)
+            char   *outfile           Output file (or blank string)
+            int    *DibideSmoothIter  Number of division interations
+            int    *NDivide           Number of divisions
+            BOOL   *DivSmooth         Do division smoothing
+            BOOL   *Quiet             Operate quietly
+   Returns: BOOL                      Success?
+
+   Parse the command line
+   
+   28.03.95 Original    By: ACRM
+*/
+BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
+                  int *DivideSmoothIter, int *NDivide, BOOL *DivSmooth, 
+                  BOOL *Quiet)
+{
+   argc--;
+   argv++;
+
+   infile[0] = outfile[0] = '\0';
+   
+   while(argc)
+   {
+      if(argv[0][0] == '-')
+      {
+         switch(argv[0][1])
+         {
+         case 's':
+         case 'S':
+            argc--;  argv++;
+            sscanf(argv[0],"%d",DivideSmoothIter);
+            break;
+         case 'n':
+         case 'N':
+            argc--;  argv++;
+            sscanf(argv[0],"%d",NDivide);
+            break;
+         case 'd':
+         case 'D':
+            *DivSmooth = TRUE;
+            break;
+         case 'q':
+         case 'Q':
+            *Quiet = TRUE;
+            break;
+         default:
+            return(FALSE);
+            break;
+         }
+      }
+      else
+      {
+         /* Check that there are only 1 or 2 arguments left             */
+         if(argc > 2)
+            return(FALSE);
+         
+         /* Copy the first to infile                                    */
+         strcpy(infile, argv[0]);
+         
+         /* If there's another, copy it to outfile                      */
+         argc--;
+         argv++;
+         if(argc)
+            strcpy(outfile, argv[0]);
+            
+         return(TRUE);
+      }
+      argc--;
+      argv++;
+   }
+   
+   return(TRUE);
+}
+
+
+/************************************************************************/
+/*>void Usage(void)
+   ----------------
+   Prints a usage message
+
+   28.03.95 Original    By: ACRM
+   23.10.95 V2.1
+*/
+void Usage(void)
+{
+   fprintf(stderr,"\nWorms V2.1 (c) 1993-5 Dr. Andrew C.R. Martin, \
+SciTech Software\n\n");
+   fprintf(stderr,"Usage: worms [-q] [-n <n>] [-d] [-s <n>] [<in.pdb> \
+[<out.pdb>]]\n");
+   fprintf(stderr,"       -q Operate quietly\n");
+   fprintf(stderr,"       -n Specify the number of spheres to be \
+placed between splined atoms [30]\n");
+   fprintf(stderr,"       -d Use division smoothing rather than \
+B-spline\n");
+   fprintf(stderr,"       -s Specify the division smoothing factor \
+[4]\n");
+   fprintf(stderr,"\nCreates a set of spheres along the smoothed \
+C-alpha chain.\n");
+}

@@ -1,3 +1,0 @@
-qtree -s 600 600 -c gloop2.dat pdb:gl2mod.pdb      gl2mod.mtv
-qtree -s 600 600 -c gloop2.dat pdb:gl2p21x14.pdb   gl2p21x14.mtv
-qtree -s 600 600 -c gloop2.dat pdb:gl2p1.pdb       gl2p1.mtv
