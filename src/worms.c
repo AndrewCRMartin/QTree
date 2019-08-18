@@ -3,11 +3,11 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V2.1 
-   Date:       23.10.95
+   Version:    V2.2
+   Date:       14.10.03
    Function:   Preprocessor for QTree to create a worms image
    
-   Copyright:  (c) SciTech Software 1993-5
+   Copyright:  (c) SciTech Software 1993-2003
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -15,7 +15,7 @@
                Surrey,
                KT21 2TD.
    Phone:      +44 (0) 1372 275775
-   EMail:      martin@biochem.ucl.ac.uk
+   EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
 
@@ -80,8 +80,10 @@
    V1.10 24.06.94 Skipped
    V1.11 04.10.94 Skipped
    V1.12 21.12.94 Improved Usage message
-   V2.0  28.03.95 Able to sue stdio
+   V2.0  28.03.95 Able to use stdio
    V2.1  23.10.95 Skipped
+   V2.2  14.10.03 Changed for new PDB structure
+   V2.2a 18.10.07 Changed %lf to %f in printf calls
 
 *************************************************************************/
 /* Includes
@@ -108,7 +110,7 @@ static int sTotalCAlpha = 0;
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: Worms V2.1  SciTech Software, 1993-1995";
+   *sVers="\0$VER: Worms V2.2a  SciTech Software, 1993-2003";
 #endif
 
 /************************************************************************/
@@ -143,6 +145,8 @@ void Usage(void);
    11.08.93 Free's memory allocated as divide and worm
    21.12.94 Improved usage message
    23.10.95 V2.1
+   14.10.03 V2.2
+   18.10.07 V2.2a
 */
 int main(int argc, char **argv)
 {
@@ -171,12 +175,12 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nWorms V2.1\n");
-            fprintf(stderr,"==========\n");
+            fprintf(stderr,"\nWorms V2.2a\n");
+            fprintf(stderr,"===========\n");
             fprintf(stderr,"Worms program for use with QTree. SciTech \
 Software\n");
-            fprintf(stderr,"Copyright (C) 1993-5 SciTech Software. All \
-Rights Reserved.\n");
+            fprintf(stderr,"Copyright (C) 1993-2007 SciTech Software. \
+All Rights Reserved.\n");
             fprintf(stderr,"This program is freely distributable \
 providing no profit is made in so doing.\n\n");
          }
@@ -351,6 +355,8 @@ PDB *DivideSmooth(PDB *InWorm, int NIn)
    the atom name to WRM. Form is as a PDB file.
    
    23.07.93 Original    By: ACRM
+   14.10.03 changed 'junk' to 'record_type' for new PDB structure
+   18.10.07 Changed %lf to %f for ANSI C
 */
 void WriteWorm(FILE *fp, PDB *worm, int nworm)
 {
@@ -358,9 +364,9 @@ void WriteWorm(FILE *fp, PDB *worm, int nworm)
    
    for(i=0; i<nworm; i++)
    {
-      fprintf(fp,"%-6s%5d  %-4s%-4s%1s%4d%1s   %8.3lf%8.3lf%8.3lf\
-%6.2lf%6.2lf\n",
-              worm[i].junk,
+      fprintf(fp,"%-6s%5d  %-4s%-4s%1s%4d%1s   %8.3f%8.3f%8.3f\
+%6.2f%6.2f\n",
+              worm[i].record_type,
               worm[i].atnum,
               "WRM ",
               worm[i].resnam,
@@ -930,10 +936,12 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
 
    28.03.95 Original    By: ACRM
    23.10.95 V2.1
+   14.10.03 V2.2
+   18.10.07 V2.2a
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nWorms V2.1 (c) 1993-5 Dr. Andrew C.R. Martin, \
+   fprintf(stderr,"\nWorms V2.2a (c) 1993-2007 Dr. Andrew C.R. Martin, \
 SciTech Software\n\n");
    fprintf(stderr,"Usage: worms [-q] [-n <n>] [-d] [-s <n>] [<in.pdb> \
 [<out.pdb>]]\n");

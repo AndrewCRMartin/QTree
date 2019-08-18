@@ -3,11 +3,11 @@
    Program:    QTree
    File:       qtree.h
    
-   Version:    V2.1
-   Date:       23.10.95
+   Version:    V2.2
+   Date:       14.10.03
    Function:   Include file for QTree
    
-   Copyright:  (c) SciTech Software 1993-5
+   Copyright:  (c) SciTech Software 1993-2003
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -15,7 +15,7 @@
                Surrey,
                KT21 2TD.
    Phone:      +44 (0) 1372 275775
-   EMail:      UUCP:  martin@biochem.ucl.ac.uk
+   EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
 
@@ -79,7 +79,7 @@
    V1.12 21.12.94 Skipped
    V2.0  30.03.95 Skipped
    V2.1  23.10.95 Skipped
-
+   V2.2  14.10.03 Added BOUNDS and RADIUS stuff
 
 *************************************************************************/
 
@@ -107,6 +107,7 @@
 #define SIZE  512       /* Display size (square) 256                    */
 #define XSIZE 800       /* Screen width          320                    */
 #define YSIZE 600       /* Screen height         256                    */
+#define MAXATNAM 8      /* Max atom name array size                     */
 
 /************************************************************************/
 /* Structure type definitions
@@ -140,34 +141,54 @@ typedef struct
 
 typedef struct
 {
-    REAL z,
-         depth;
-    BOOL flag;
-}   SLAB;
+   REAL z,
+        depth;
+   BOOL flag;
+}  SLAB;
+
+typedef struct
+{
+   REAL xmin, xmax,
+        ymin, ymax,
+        zmin, zmax;
+   BOOL flag;
+}  BOUNDS;
+
+typedef struct _radii
+{
+   struct _radii *next;
+   REAL radius;
+   char atnam[MAXATNAM],
+        resnam[MAXATNAM];
+}  RADII;
 
 /************************************************************************/
 /* Global variables
 */
 #ifdef MAIN    /*---------------- Main program definitions -------------*/
-LIGHT gLight;              /* The light                                 */
-DCUE  gDepthCue;           /* Depthcue info                             */
-REAL  gScale     = 0.9,    /* Scaling factor                            */
-      gSphScale  = 1.0;    /* Sphere scaling factor                     */
-VEC3F gMidPoint;           /* Mid point of structure for centering      */
-char  gOutFile[160];       /* Output file name                          */
-int   gSize = SIZE,        /* Display size                              */
-      gScreen[2];          /* Screen size                               */
-SLAB  gSlab;               /* Slabbing                                  */
+LIGHT  gLight;             /* The light                                 */
+DCUE   gDepthCue;          /* Depthcue info                             */
+REAL   gScale     = 0.9,   /* Scaling factor                            */
+       gSphScale  = 1.0;   /* Sphere scaling factor                     */
+VEC3F  gMidPoint;          /* Mid point of structure for centering      */
+char   gOutFile[160];      /* Output file name                          */
+int    gSize = SIZE,       /* Display size                              */
+       gScreen[2];         /* Screen size                               */
+SLAB   gSlab;              /* Slabbing                                  */
+BOUNDS gBounds;            /* User specified boundary of image          */
+RADII  *gRadii = NULL;     /* Linked list of atom radii                 */
 #else          /*----------------------- Externals ---------------------*/
-extern LIGHT gLight;
-extern DCUE  gDepthCue;
-extern REAL  gScale,
-             gSphScale;
-extern VEC3F gMidPoint;
-extern char  gOutFile[160];
-extern int   gSize,
-             gScreen[2];
-extern SLAB  gSlab;
+extern LIGHT  gLight;
+extern DCUE   gDepthCue;
+extern REAL   gScale,
+              gSphScale;
+extern VEC3F  gMidPoint;
+extern char   gOutFile[160];
+extern int    gSize,
+              gScreen[2];
+extern SLAB   gSlab;
+extern BOUNDS gBounds;
+extern RADII  *gRadii;
 #endif         /*-------------------------------------------------------*/
 
 

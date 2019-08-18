@@ -3,11 +3,11 @@
    Program:    QTree
    File:       graphics.c
    
-   Version:    V2.1
-   Date:       23.10.95
+   Version:    V2.2
+   Date:       14.10.03
    Function:   Display routines for QTree
    
-   Copyright:  (c) SciTech Software 1993-5
+   Copyright:  (c) SciTech Software 1993-2003
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -15,7 +15,7 @@
                Surrey,
                KT21 2TD.
    Phone:      +44 (0) 1372 275775
-   EMail:      martin@biochem.ucl.ac.uk
+   EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
 
@@ -78,6 +78,7 @@
    V1.12 21.12.94 Skipped
    V2.0  28.03.95 Modified for output on stdout
    V2.1  23.10.95 Skipped
+   V2.2  14.10.03 Skipped
 
 *************************************************************************/
 /* Includes

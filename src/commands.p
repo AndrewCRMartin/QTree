@@ -34,3 +34,5 @@ void DoChain(SPHERE *spheres, PDB *pdb, int NSphere, char *chain,
 void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom, 
             char *red, char *green, char *blue)
 ;
+void DoRadius(char *atomspec, char *radius_str)
+;

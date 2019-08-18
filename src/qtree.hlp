@@ -273,3 +273,38 @@
    behaviour to be modified.)
    
    If the requested atom is not found, the C-alpha will be used.
+#BOUNDS
+
+
+
+   BOUNDS xmin xmax ymin ymax zmin zmax
+
+   Specify the coordinate boundaries for the display. Particularly
+   useful when creating a set of images from slightly different
+   proteins where the automatic scaling would render views with
+   slightly different sizes.
+
+   Note that the coordinates specified will be after any rotations
+   have been applied so may not match what you expect. If you need
+   to apply rotations it is probably sensible to do so on the
+   coordinate file before reading into QTree
+#RADIUS
+
+
+
+   RADIUS resatomspec size
+
+   Specify the radius for an atom.
+
+   resatomspec is of the form [restype.]atomname - restype is an
+   optional residue name while atomname is the atomname or a * to
+   represent all atom types.
+
+   You an specify multiple RADIUS commands. The radius used will
+   be from the first RADIUS command to match. For example:
+      RADIUS CA 1.8
+      RADIUS TYR.CA 1.5
+   would result in all CA atoms having a radius of 1.5 since the
+   CA of tyrosine will match the first RADIUS command. To get the
+   desired effect, put the specific RADIUS commands first and the
+   more general one last.

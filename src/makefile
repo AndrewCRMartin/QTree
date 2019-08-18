@@ -1,17 +1,43 @@
 CC     = cc
 OFILES = qtree.o graphics.o commands.o 
 LFILES = bioplib/RotPDB.o bioplib/ReadPDB.o bioplib/help.o \
-bioplib/matrix.o bioplib/parse.o bioplib/general.o \
-bioplib/fsscanf.o bioplib/ModPDB.o bioplib/ApMatPDB.o \
-bioplib/OrigPDB.o bioplib/GetCGPDB.o bioplib/WindIO.o \
-bioplib/WritePDB.o bioplib/angle.o bioplib/array.o \
-bioplib/ParseRes.o bioplib/PDBList.o bioplib/CalcPDB.o \
-bioplib/ZonePDB.o
+bioplib/parse.o  \
+bioplib/fsscanf.o bioplib/ApMatPDB.o \
+ bioplib/GetCGPDB.o bioplib/WindIO.o \
+bioplib/WritePDB.o bioplib/angle.o  \
+bioplib/ParseRes.o \
+bioplib/array2.o \
+bioplib/padterm.o \
+bioplib/OriginPDB.o \
+bioplib/InPDBZone.o \
+bioplib/KillLeadSpaces.o \
+bioplib/StringToUpper.o \
+bioplib/OpenFile.o \
+bioplib/MatMult3_33.o \
+bioplib/FindNextResidue.o \
+bioplib/chindex.o \
+bioplib/TranslatePDB.o \
+bioplib/CreateRotMat.o 
+
+
+
+
+
 
 
 UFILES = bioplib/ReadPDB.o bioplib/angle.o \
-bioplib/array.o bioplib/fsscanf.o bioplib/PDBList.o \
-bioplib/WritePDB.o bioplib/general.o bioplib/WindIO.o
+bioplib/fsscanf.o \
+bioplib/WritePDB.o \
+bioplib/OpenStdFiles.o \
+bioplib/CopyPDB.o \
+bioplib/chindex.o \
+bioplib/FindNextResidue.o \
+bioplib/padterm.o
+
+
+
+
+
 
 all : qtree worms ballstick cpk
 

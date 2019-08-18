@@ -3,19 +3,13 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V2.1c
-   Date:       18.06.96
+   Version:    V2.2a
+   Date:       18.10.07
    Function:   Use quad-tree algorithm to display a molecule
    
-   Copyright:  (c) SciTech Software 1993-6
+   Copyright:  (c) SciTech Software 1993-2007
    Author:     Dr. Andrew C. R. Martin
-   Address:    SciTech Software
-               23, Stag Leys,
-               Ashtead,
-               Surrey,
-               KT21 2TD.
-   Phone:      +44 (0) 1372 275775
-   EMail:      martin@biochem.ucl.ac.uk
+   EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
 
@@ -102,6 +96,8 @@
    V2.1a 06.12.95 Added CHAIN command
    V2.1b 08.02.96 Fixed bug when handling inserts within zones
    V2.1c 18.06.96 Moved InZone() into bioplib as InPDBZone()
+   V2.2  14.10.03 Added BOUNDS and RADIUS
+   V2.2a 18.10.07 Some cleanup for ANSI C
 
 *************************************************************************/
 /* Includes
@@ -117,6 +113,7 @@
 #include <dos.h>
 #else
 #include <signal.h>   /* If you don't have signal.h, it's no great loss */
+typedef void (*sighandler_t)(int);
 #endif
 
 #include "bioplib/macros.h"
@@ -155,7 +152,7 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: QTree V2.1c - SciTech Software, 1993-6";
+   *sVers="\0$VER: QTree V2.2a - SciTech Software, 1993-2007";
 #endif
 
 
@@ -189,6 +186,8 @@ static unsigned char
    06.12.95 V2.1a
    08.02.96 V2.1b
    18.02.96 V2.1c
+   14.10.03 V2.2
+   18.10.07 V2.2a Cast added to onbreak()
 */
 int main(int argc, char **argv)
 {
@@ -212,7 +211,7 @@ int main(int argc, char **argv)
 #endif
 
    /* Establish a NULL CTRL-C trap                                      */
-   onbreak(&CtrlCNoExit);
+   onbreak((void *)&CtrlCNoExit);
    
 #ifdef DEPTHCUE
    /* Set default depth cueing parameter                                */
@@ -222,6 +221,9 @@ int main(int argc, char **argv)
    /* Default scaling                                                   */
    gScale    = 0.9;
    gSphScale = 1.0;
+
+   /* Default to work out boundaries internally                         */
+   gBounds.flag = FALSE;
    
    /* Default image size                                                */
    gSize = SIZE;
@@ -272,10 +274,10 @@ int main(int argc, char **argv)
       /* Banner message                                                 */
       if(!Quiet)
       {
-         fprintf(stderr,"\nQTree V2.1c\n");
+         fprintf(stderr,"\nQTree V2.2a\n");
          fprintf(stderr,"=========== \n");
          fprintf(stderr,"CPK program for PDB files. SciTech Software\n");
-         fprintf(stderr,"Copyright (C) 1993-6 SciTech Software. All \
+         fprintf(stderr,"Copyright (C) 1993-2007 SciTech Software. All \
 Rights Reserved.\n");
          fprintf(stderr,"This program is freely distributable providing \
 no profit is made in so doing.\n\n");
@@ -367,9 +369,9 @@ sphere list.\n");
 #ifdef SHOW_INFO
       if(OK && !Quiet)
       {
-         fprintf(stderr,"Pixel coverage: %.3lf\n",
+         fprintf(stderr,"Pixel coverage: %.3f\n",
                  (double)sNPixels/(double)(gSize*gSize));
-         fprintf(stderr,"CPU Time:       %.3lf seconds\n",
+         fprintf(stderr,"CPU Time:       %.3f seconds\n",
                  (double)(StopTime-StartTime)/CLOCKS_PER_SEC);
       }
 #endif
@@ -396,6 +398,7 @@ sphere list.\n");
    29.03.94 Applies z scaling to the slab data as well.
             Radius multiplied by gSphScale when using bval
    04.10.94 Sphere radius taken from oxx rather than bval
+   14.10.03 Added BOUNDS and RADII stuff
 */
 void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
 {
@@ -405,10 +408,28 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
          ymin, ymax,
          zmin, zmax,
          size;
-         
-   xmin = xmax = pdb->x;
-   ymin = ymax = pdb->y;
-   zmin = zmax = pdb->z;
+   BOOL  found;
+   RADII *r;
+   
+    
+   /* If we have specified boundaries, use those, otherwise initialize
+      boundaries so we can find them from the coordinates
+   */
+   if(gBounds.flag)
+   {
+      xmin = gBounds.xmin;
+      xmax = gBounds.xmax;
+      ymin = gBounds.ymin;
+      ymax = gBounds.ymax;
+      zmin = gBounds.zmin;
+      zmax = gBounds.zmax;
+   }
+   else
+   {
+      xmin = xmax = pdb->x;
+      ymin = ymax = pdb->y;
+      zmin = zmax = pdb->z;
+   }
 
    /* Transfer coordinates and find limits of size                      */
    for(p=pdb,i=0; p!=NULL && i<NSphere; NEXT(p), i++)
@@ -423,39 +444,66 @@ void MapSpheres(PDB *pdb, SPHERE *spheres, int NSphere)
       }
       else
       {
-         switch(p->atnam[0])
+         /* If we have specified atom radii, see if this atom is in the
+            list
+         */
+         found = FALSE;
+         if(gRadii)
          {
-         case 'C':                           /* Carbon:      r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
-            break;
-         case 'N':                           /* Nitrogen:    r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
-            break;
-         case 'O':                           /* Oxygen:      r = 1.35   */
-            spheres[i].rad    = 1.35 * gSphScale;
-            break;
-         case 'S':                           /* Sulphur:     r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
-            break;
-         case 'H':                           /* Hydrogen:    r = 1.0    */
-            spheres[i].rad    = 1.0  * gSphScale;
-            break;
-         case 'W':                           /* Worm sphere: r = 0.75   */
-            if(!strncmp(p->atnam,"WRM ",4))
-               spheres[i].rad = 0.75 * gSphScale;
-            break;
-         default:                            /* Default:     r = 1.7    */
-            spheres[i].rad    = 1.7  * gSphScale;
-            break;
+            for(r=gRadii; r!=NULL; NEXT(r))
+            {
+               if(((r->atnam[0] == '\0') ||
+                   !strncmp(r->atnam, p->atnam, 4)) &&
+                  ((r->resnam[0] == '\0') || 
+                   !strncmp(r->resnam, p->resnam, 4)))
+               {
+                  spheres[i].rad = r->radius;
+                  found = TRUE;
+                  break;
+               }
+            }
+         }
+
+         /* If not, use default values                                  */
+         if(!found)
+         {
+            switch(p->atnam[0])
+            {
+            case 'C':                        /* Carbon:      r = 1.7    */
+               spheres[i].rad    = 1.7  * gSphScale;
+               break;
+            case 'N':                        /* Nitrogen:    r = 1.7    */
+               spheres[i].rad    = 1.7  * gSphScale;
+               break;
+            case 'O':                        /* Oxygen:      r = 1.35   */
+               spheres[i].rad    = 1.35 * gSphScale;
+               break;
+            case 'S':                        /* Sulphur:     r = 1.7    */
+               spheres[i].rad    = 1.7  * gSphScale;
+               break;
+            case 'H':                        /* Hydrogen:    r = 1.0    */
+               spheres[i].rad    = 1.0  * gSphScale;
+               break;
+            case 'W':                        /* Worm sphere: r = 0.75   */
+               if(!strncmp(p->atnam,"WRM ",4))
+                  spheres[i].rad = 0.75 * gSphScale;
+               break;
+            default:                         /* Default:     r = 1.7    */
+               spheres[i].rad    = 1.7  * gSphScale;
+               break;
+            }
          }
       }
       
-      if(spheres[i].x > xmax) xmax = spheres[i].x + spheres[i].rad;
-      if(spheres[i].x < xmin) xmin = spheres[i].x - spheres[i].rad;
-      if(spheres[i].y > ymax) ymax = spheres[i].y + spheres[i].rad;
-      if(spheres[i].y < ymin) ymin = spheres[i].y - spheres[i].rad;
-      if(spheres[i].z > zmax) zmax = spheres[i].z + spheres[i].rad;
-      if(spheres[i].z < zmin) zmin = spheres[i].z - spheres[i].rad;
+      if(!gBounds.flag)
+      {
+         if(spheres[i].x > xmax) xmax = spheres[i].x + spheres[i].rad;
+         if(spheres[i].x < xmin) xmin = spheres[i].x - spheres[i].rad;
+         if(spheres[i].y > ymax) ymax = spheres[i].y + spheres[i].rad;
+         if(spheres[i].y < ymin) ymin = spheres[i].y - spheres[i].rad;
+         if(spheres[i].z > zmax) zmax = spheres[i].z + spheres[i].rad;
+         if(spheres[i].z < zmin) zmin = spheres[i].z - spheres[i].rad;
+      }
    }
 
       
@@ -592,6 +640,7 @@ SPHERE *CreateSphereList(PDB *pdb, int NAtom)
    19.07.93 Original    By: ACRM
    20.07.93 Added onbreak() for Amiga. Corrected call to SplitPic() to
             use NSphOut, not NSphere
+   18.10.07 Added casts to onbreak()
 */
 BOOL SpaceFill(SPHERE *AllSpheres, int NSphere)
 {
@@ -607,7 +656,7 @@ BOOL SpaceFill(SPHERE *AllSpheres, int NSphere)
    setjmp(sSaveUnwind);
    
    /* Establish a CTRL-C trap                                           */
-   onbreak(&CtrlCExit);
+   onbreak((void *)&CtrlCExit);
    
    /* sOKFlag is cleared if an error occurs during the recursive 
       splitting process and will only be set if we have returned here 
@@ -631,7 +680,7 @@ BOOL SpaceFill(SPHERE *AllSpheres, int NSphere)
    }
    
    /* Establish a NULL CTRL-C trap                                      */
-   onbreak(&CtrlCNoExit);
+   onbreak((void *)&CtrlCNoExit);
    
    /* Free memory                                                       */
    if(spheres != NULL)  free(spheres);
@@ -1033,10 +1082,11 @@ int CtrlCNoExit(void)
    the signal() call so this is a NULL routine
 
    30.03.95 Original    By: ACRM
+   18.10.07 Changed (void *) case to (sighander_t)
 */
 void onbreak(void *func)
 {
-   signal((int)SIGINT, (void *)func);
+   signal((int)SIGINT, (sighandler_t)func);
 }
 #endif
 
@@ -1350,6 +1400,8 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    06.12.95 V2.1a
    08.02.96 V2.1b
    18.06.96 V2.1c
+   14.10.03 V2.2
+   18.10.07 V2.2a
 */
 void UsageExit(BOOL ShowHelp)
 {
@@ -1360,7 +1412,7 @@ void UsageExit(BOOL ShowHelp)
    }
    else
    {
-      fprintf(stderr,"\nQTree V2.1c (c) 1993-6 Dr. Andrew C.R. Martin, \
+      fprintf(stderr,"\nQTree V2.2a (c) 1993-2007 Dr. Andrew C.R. Martin, \
 SciTech Software\n\n");
       
       fprintf(stderr,"Usage: qtree [-q] [-b] [-c <control.dat>] [-r <n>] \

@@ -3,11 +3,11 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V2.1b
-   Date:       08.02.96
+   Version:    V2.2
+   Date:       14.10.03
    Function:   Handle command files for QTree program
    
-   Copyright:  (c) SciTech Software 1993-6
+   Copyright:  (c) SciTech Software 1993-2003
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -15,7 +15,7 @@
                Surrey,
                KT21 2TD.
    Phone:      +44 (0) 1372 275775
-   EMail:      martin@biochem.ucl.ac.uk
+   EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
 
@@ -84,6 +84,7 @@
                   correctly handle residues within a zone which had
                   insertion codes
    V2.1c 18.06.96 Changed InZone() to InPDBZone() and moved to bioplib
+   V2.2  14.10.03 Added BOUNDS and RADIUS commands
 
 *************************************************************************/
 /* Includes
@@ -137,7 +138,9 @@
 #define COM_SLAB              17
 #define COM_TEMP              18
 #define COM_CHAIN             19
-#define PARSER_NCOMM          20
+#define COM_BOUNDS            20
+#define COM_RADIUS            21
+#define PARSER_NCOMM          22
 
 /************************************************************************/
 KeyWd sKeyWords[PARSER_NCOMM];         /* Parser keywords               */
@@ -156,6 +159,7 @@ REAL  sRealParam[PARSER_MAXREALPARAM]; /* Parser real parameters        */
    24.03.94 Added SLAB
    24.06.94 Added TEMPERATURE
    06.12.95 Added CHAIN
+   14.10.03 Added BOUNDS and RADIUS
 */
 BOOL SetupParser(void)
 {
@@ -196,6 +200,8 @@ BOOL SetupParser(void)
    MAKEKEY(sKeyWords[COM_SLAB],     "SLAB",        STRING,3);
    MAKEKEY(sKeyWords[COM_TEMP],     "TEMPERATURE", NUMBER,0);
    MAKEKEY(sKeyWords[COM_CHAIN],    "CHAIN",       STRING,4);
+   MAKEKEY(sKeyWords[COM_BOUNDS],   "BOUNDS",      NUMBER,6);
+   MAKEKEY(sKeyWords[COM_RADIUS],   "RADIUS",      STRING,2);
    
    /* Check all allocations OK                                          */
    for(i=0; i<PARSER_NCOMM; i++)
@@ -226,6 +232,7 @@ BOOL SetupParser(void)
             set of parameters
    23.10.95 Changed error messages to go to stderr
    06.12.95 Added CHAIN
+   14.10.03 Added BOUNDS and RADIUS
 */
 void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
                    BOOL ReportError)
@@ -362,6 +369,18 @@ void HandleControl(char *file, PDB *pdb, SPHERE *spheres, int NSphere,
             DoChain(spheres,pdb,NSphere,sStrParam[0],sStrParam[1],
                     sStrParam[2],sStrParam[3]);
             SetDefault = TRUE;
+            break;
+         case COM_BOUNDS:
+            gBounds.flag = TRUE;
+            gBounds.xmin = sRealParam[0];
+            gBounds.xmax = sRealParam[1];
+            gBounds.ymin = sRealParam[2];
+            gBounds.ymax = sRealParam[3];
+            gBounds.zmin = sRealParam[4];
+            gBounds.zmax = sRealParam[5];
+            break;
+         case COM_RADIUS:
+            DoRadius(sStrParam[0], sStrParam[1]);
             break;
          default:
             break;
@@ -907,3 +926,82 @@ void DoAtom(SPHERE *spheres, PDB *pdb, int NSphere, char *atom,
 }
 
 
+/************************************************************************/
+/*>void DoRadius(char *atomspec, char *radius_str)
+   -----------------------------------------------
+   Input:   char    *atomspec      Atom specification
+            char    *radius_str    Radius (as a string)
+   
+*/
+void DoRadius(char *atomspec, char *radius_str)
+{
+   static RADII *r   = NULL;
+   char         *chp = NULL;
+   REAL         radius;
+
+   if(!sscanf(radius_str, "%lf", &radius))
+   {
+      fprintf(stderr,"Warning: RADIUS command has invalid \
+radius: %s (ignored)\n", radius_str);
+   }
+   else
+   {
+      /* Make space in linked list to store atom spec and radius        */
+      if(gRadii == NULL)
+      {
+         INIT(gRadii, RADII);
+         r = gRadii;
+      }
+      else
+      {
+         ALLOCNEXT(r, RADII);
+      }
+      if(r==NULL)
+      {
+         fprintf(stderr,"Error: No memory for radius list\n");
+         exit(1);
+      }
+      
+      /* Store the radius                                               */
+      r->radius = radius;
+
+      /* Now parse out atom name and residue name                       */
+      if((chp=strchr(atomspec, (int)'.'))==NULL)
+      {
+         /* No '.' in atomspec so it's just an atom name                */
+         if(atomspec[0] == '*')
+         {
+            r->atnam[0] = '\0';
+         }
+         else
+         {
+            strncpy(r->atnam, atomspec, MAXATNAM);
+            PADMINTERM(r->atnam, 4);
+         }
+         r->resnam[0] = '\0';
+      }
+      else
+      {
+         /* We found a '.', so terminate string there, copy last part to
+            atomspec and grab residue name
+         */
+         *chp = '\0';
+         if(*(chp+1) == '*')
+         {
+            r->atnam[0] = '\0';
+         }
+         else
+         {
+            strncpy(r->atnam,  chp+1, MAXATNAM);
+            PADMINTERM(r->atnam, 4);
+         }
+
+         strncpy(r->resnam, atomspec, MAXATNAM);
+         PADMINTERM(r->resnam, 4);
+      }
+   }
+}
+
+            
+            
+            

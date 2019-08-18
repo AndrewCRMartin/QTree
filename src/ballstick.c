@@ -3,11 +3,11 @@
    Program:    BallStick
    File:       BallStick.c
    
-   Version:    V2.1c
-   Date:       30.06.98
+   Version:    V2.2
+   Date:       14.10.03
    Function:   Preprocessor for QTree to create a Ball & Stick image
    
-   Copyright:  (c) SciTech Software 1993-8
+   Copyright:  (c) SciTech Software 1993-2003
    Author:     Dr. Andrew C. R. Martin
    Address:    SciTech Software
                23, Stag Leys,
@@ -15,7 +15,7 @@
                Surrey,
                KT21 2TD.
    Phone:      +44 (0) 1372 275775
-   EMail:      martin@biochem.ucl.ac.uk
+   EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
 
@@ -84,6 +84,8 @@
    V2.1b 30.09.97 Tidied for clean compile under gcc
    V2.1c 30.06.98 If -m is specified this now also applies to between-
                   residue links
+   V2.2  14.10.03 Skipped
+   V2.2  14.10.03 Changed for new PDB structure
 
 *************************************************************************/
 /* Includes
@@ -112,8 +114,8 @@ static BOOL gMaxSpecified = FALSE;
 
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: BallStick V2.1c - SciTech Software, \
-1993-8";
+static unsigned char *sVers="\0$VER: BallStick V2.2 - SciTech Software, \
+1993-2003";
 #endif
 
 /************************************************************************/
@@ -141,6 +143,7 @@ void UsageExit(void);
    23.10.95 V2.1
    30.09.97 V2.1b
    30.06.98 V2.1c
+   14.10.03 V2.2
 */
 int main(int argc, char **argv)
 {
@@ -166,12 +169,12 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nBallStick V2.1c\n");
-            fprintf(stderr,"===============\n");
+            fprintf(stderr,"\nBallStick V2.2\n");
+            fprintf(stderr,"==============\n");
             fprintf(stderr,"Ball and Stick program for use with QTree. \
 SciTech Software\n");
-            fprintf(stderr,"Copyright (C) 1993-8 SciTech Software. All \
-Rights Reserved.\n");
+            fprintf(stderr,"Copyright (C) 1993-2003 SciTech Software. \
+All Rights Reserved.\n");
             fprintf(stderr,"This program is freely distributable \
 providing no profit is made in so doing.\n\n");
          }
@@ -379,6 +382,7 @@ long int WriteSticks(FILE *out, PDB *pdb, int NDivide, REAL StickRad,
    -------------------------------------------------
    Write the balls which form a stick.
    28.07.93 Original    By: ACRM
+   14.10.03 changed 'junk' to 'record_type' for new PDB structure
 */
 void WriteBalls(FILE *fp, PDB *balls, int nballs)
 {
@@ -388,7 +392,7 @@ void WriteBalls(FILE *fp, PDB *balls, int nballs)
    {
       fprintf(fp,"%-6s%5d  %-4s%-4s%1s%4d%1s   %8.3f%8.3f%8.3f\
 %6.2f%6.2f\n",
-              balls[i].junk,
+              balls[i].record_type,
               balls[i].atnum,
               balls[i].atnam,
               balls[i].resnam,
@@ -517,11 +521,12 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.09.97 V2.1a Added -m
    30.09.97 V2.1b
    30.06.98 V2.1c -m now also applies to between residue links
+   14.10.03 V2.2
 */
 void UsageExit(void)
 {
-   fprintf(stderr,"\nBallStick V2.1c (c) 1993-8 Dr. Andrew C.R. Martin, \
-SciTech Software\n\n");
+   fprintf(stderr,"\nBallStick V2.2 (c) 1993-2003 Dr. Andrew C.R. \
+Martin, SciTech Software\n\n");
    
    fprintf(stderr,"Usage: BallStick [-q] [-n <n>] [-b <r>] [-s <r>] [-d] \
 [-m <d>] [<in.pdb> [<out.pdb>]]\n");
@@ -542,4 +547,3 @@ both\n");
 
    exit(0);
 }
-

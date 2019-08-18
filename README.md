@@ -2,22 +2,23 @@
 
 
 
-                              QTree V1.12
-                              ===========
+                              QTree V2.1
+                              ==========
 
-
+                        Dr. Andrew C.R. Martin
                            SciTech Software
-
-                             23 Stag Leys,
-                               Ashtead,
-                                Surrey.
-                               KT21 2TD.
-
-                        Tel.: +44 (0)372 275775
-                        Fax.: +44 (0)372 813069
 
 
                             Now working at:
+
+               School of Animal and Microbial Sciences,
+                        University of Reading,
+                            Whiteknights,
+                             P.O.Box 228,
+                           Reading RG6 6AJ.
+
+
+              Some modifications made while working at:
 
               Biomolecular Structure and Modelling Unit,
           Department of Biochemistry and Molecular Biology,
@@ -28,33 +29,36 @@
 
    =====================================================================
 
-      EMail: martin@biochem.ucl.ac.uk
-
-      -or-   (if that doesn't work --- your system manager's fault!)
-             martin@bsm.bioc.ucl.ac.uk
+                     EMail: andrew@bioinf.org.uk
 
    =====================================================================
 
 
-   QTree is Copyright (c) 1993-4, Dr. Andrew C.R. Martin
+   QTree is Copyright (c) 1993-5, Dr. Andrew C.R. Martin
 
 
-   The executable program and source code are freely distributable,
-   providing all files are distributed intact. Further versions of 
-   the file graphics.c may also be distributed with the software to
-   provide supprt for alternative hardware platforms and display
-   devices.
+   This program is not in the public domain.
 
-   With the exception of additional versions of graphics.c, you may not
-   distribute any changes you make to QTree. Please send any such 
-   changes to SciTech Software so that they can be incorporated into
-   future releases of the software.
-
-   Please note that the source code may NOT be used for any other 
-   purposes without the prior permission of SciTech Software. This is
-   because it is intended to produce a library of such routines which
-   will be made available (probably in the form of a book).
-                              
+   It may not be copied or made available to third parties, but may be
+   freely used by non-profit-making organisations who have obtained it
+   directly from the author or by FTP.
+   
+   You are requested to send EMail to the author to say that you are
+   using this code so that you may be informed of future updates.
+   
+   The code may not be made available on other FTP sites without express
+   permission from the author.
+   
+   The code may be modified as required, but any modifications must be
+   documented so that the person responsible can be identified. If
+   someone else breaks this code, the author doesn't want to be blamed
+   for code that does not work! You may not distribute any
+   modifications, but are encouraged to send them to the author so
+   that they may be incorporated into future versions of the code.
+   
+   The code may not be sold commercially or used for commercial purposes
+   without prior permission from the author.
+                                                
    =====================================================================
 
 
@@ -63,15 +67,18 @@
 Introduction
 ============
 
-   QTree is a program for generating space-filling pictures of molecules
-from PDB files. The code is written to be as portable as possible. Only 
-the routines in graphics.c need to be changed to support the display 
-device being used. 
+   QTree is a program for generating CPK (Corey, Pauling, Koltun)
+space-filling pictures of molecules from PDB files.  It can also
+generate worms and ball-and-stick images using preprocessing filters.
+The code is written to be as portable as possible. Only the routines
+in graphics.c need to be changed to support the display device being
+used.
 
-   QTree and its support programs, Worms and BallStick have been
-compiled and tested on Commodore Amiga, Evans & Sutherland ESV running
-Unix (native compiler), and on a PC running Linux (Gnu C compiler).
-It should run on anything else with no problems!
+   QTree and its support programs, CPK, Worms and BallStick have been
+compiled and tested on Commodore Amiga, Silicon Graphics and Evans &
+Sutherland ESV running Unix (native compilers), and on a PC running
+Linux (Gnu C compiler).  It should run on anything else with no
+problems!
 
    As of V1.5 of QTree, graphics.c has been changed simply to create
 a 24bit RGB image in MTV raytracer format. No direct graphics device
@@ -83,7 +90,9 @@ directly, but the other route is preferable for ease of portability
 of the code.
 
    Under UNIX/X-Windows, MTV graphics files may be displayed using the
-ImageMagick display program.
+ImageMagick display program. The convert program from the ImageMagick
+package may be used in a pipeline to generate GIF output (or whatever
+other form you prefer).
 
    Worms is a preprocessor program for QTree which allows the generation 
 of worm style images showing a B-spline smoothed image of the C-alpha 
@@ -94,6 +103,10 @@ image.
    BallStick is a preprocessor program for QTree which allows the 
 generation of ball and stick style images. It reads a PDB file and writes 
 a PDB file containing interpolated sphere positions along each bond.
+
+   CPK is a preprocessor program for QTree which places the default
+atom radii in the occupancy column. This allows BallStick and CPK
+representations to be combined in one image.
 
    As of V1.11, the files generated by BallStick are different: the radii
 are stored in the occupancy column rather than the temperature factor
@@ -151,14 +164,14 @@ are specified with the -s option. (Defaults to 800x600.) For example:
 
       qtree -r 256 -s 256 256 <file.pdb> <file.mtv>
 
-
+   There is also a -q switch which causes the program to run quietly
+without gerenating any copyright of informational messages.
 
 
 
    24-bit output is created in a format compatible with the MTV ray 
-tracer.
+tracer. This may be displayed using the ImageMagick package under Unix.
       
-
 
 
    To get further help, type
@@ -181,7 +194,7 @@ Running Worms
 
    Simply type:
    
-      worms [-n <n>] [-s <n>] [-d] <in.pdb> <out.pdb>
+      worms [-n <n>] [-s <n>] [-d] [-q] <in.pdb> <out.pdb>
    
    The -n switch is followed by an integer which specifies the
    number of sphere to be placed between smoothed atom positions
@@ -193,6 +206,8 @@ Running Worms
    The -s switch is followed by an integer division smoothing factor 
    (default: 4). This option is ignored if -d has not been specified.
    
+   The -q switch causes the program to run quietly without gerenating
+   any copyright of informational messages.
    
    
 Running BallStick
@@ -201,14 +216,14 @@ Running BallStick
    Required files
    --------------
    
-   BallStick            The executable program
+   ballstick            The executable program
    
    Running the program
    -------------------
       
    Simply type:
    
-      BallStick [-n <n>] [-b <b>] [-s <s>] [-d] <in.pdb> <out.pdb>
+      ballstick [-n <n>] [-b <b>] [-s <s>] [-d] [-q] <in.pdb> <out.pdb>
       
    The -n switch is followed by an integer specifying the number of small
    spheres to be placed along each bond (default: 30). With large 
@@ -223,7 +238,52 @@ Running BallStick
    the stick radius (default 0.2).
 
    The -d switch stops sticks from being created between disulphides.
+
+   The -q switch causes the program to run quietly without gerenating
+   any copyright of informational messages.
+
+
+
+Running CPK
+===========
    
+   Required files
+   --------------
+   
+   cpk                  The executable program
+   
+   Running the program
+   -------------------
+      
+   Simply type:
+   
+      cpk [-q] <in.pdb> <out.pdb>
+
+   The -q switch causes the program to run quietly without gerenating
+   any copyright of informational messages.
+      
+
+
+
+
+Pipes Under Unix
+================
+
+   As of V2.0, all programs in the QTree package support I/O through
+pipes. Therefore, to generate a worms image and display it using the
+ImageMagick display program, you may use a command line like:
+
+      worms <in.pdb> | qtree | display mtv:-
+
+   To generate a combined image where file1.pdb is to be rendered as
+CPK while file2.pdb is to be rendered as ball and stick, one would use
+the following:
+
+      cpk       file1.pdb    image.bst
+      ballstick file2.pdb  >>image.bst
+      qtree -b image.bst | display mtv:-
+
+
 
 
 Documentation
@@ -240,8 +300,8 @@ colours on residue type with a shaded background and specular reflections.
 
       
       
-Compiling QTree, Worms and BallStick
-====================================
+Compiling QTree, Worms, CPK and BallStick
+=========================================
 
    When you unpack the tar file, you will obtain a QTreeVx.xx directory
 with a subdirectory called bioplib.
@@ -283,6 +343,7 @@ Below are listed the files contained in this distribution
       worms.c        The Worms program
       
       BallStick.c    The Ball and Stick program
+      cpk.c          The CPK program
 
    Additional source files
    -----------------------
@@ -331,6 +392,7 @@ Below are listed the files contained in this distribution
       CalcPDB.c         Perform calculations on PDB linked list
       PDBList.c         Manipulate PDB linked list
       array.c           2D array generation code
+      angle.c           Angle and torsion calculation code
 
 
    N.B. Compiling on MS-DOS machines will require modification of the
@@ -347,4 +409,44 @@ Possible Future Enhancements
 
    1. Progress indicator
    2. Non-square image support
+   3. Colour by CHAIN
    
+
+Revision History
+================
+
+   V1.0  19.07.93 Original
+   V1.1  28.07.93 Added support for ball and stick
+                  Added B-spline smoothing
+   V1.2  29.07.93 Corrected bug in failure to open file
+                  Added MTV file output support and background colouring
+                  Added support for disulphide bonds
+   V1.3  11.08.93 Corrected usage message
+                  Fixed memory leak
+   V1.4  07.10.93 Fixed bug in FindChainPDB()
+                  Added option to create output file of specifed
+                  dimensions
+                  Removed direct graphic display
+   V1.5  14.09.93 Added sphere scaling option
+   V1.6  04.01.94 Fixed bug in argument parsing
+                  Some externals made static static and added casts for 
+                  GCC
+                  Fixed bug in BSplineSmoothPDB()
+   V1.7  24.03.94 Minimal tidying up
+                  Added SLAB option and warning messages.
+                  Removed ParseResSpec() as this is now in the library
+                  Applies sphere scaling when radius comes from B-value
+   V1.8  09.05.94 Fixed rounding error bug in B-spline smoothing
+   V1.9  13.05.94 Various fixes to B-spline smoothing which was getting
+                  coords out of sync with labels...
+   V1.10 24.06.94 Default colouring may now be done on temperature
+                  factor using command TEMPERATURE
+   V1.11 04.10.94 With -b, reads radii from occ rather than bval
+   V1.12 21.12.94 Improved Usage message
+   V2.0  28.03.95 Modified to allow I/O through pipes
+                  Fixed DoZone() which wasn't working properly for
+                  Ball and Stick images which split the PDB data into
+                  two sections.
+                  Ctrl-C handled properly on non-AmigaDOS systems.
+   V2.1  23.10.95 Warnings and errors all go to stderr
+
