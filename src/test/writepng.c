@@ -1,3 +1,5 @@
+/* https://www.lemoda.net/c/write-png/ */
+
 #include <png.h>
 #include <stdio.h>
 #include <stdlib.h>
