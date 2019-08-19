@@ -32,7 +32,7 @@
    =====================================================================
 ```
 
-QTree is Copyright (c) 1993-2019, Prof. Andrew C.R. Martin
+**QTree** is Copyright (c) 1993-2019, Prof. Andrew C.R. Martin
 
 
 This program is not in the public domain.
@@ -113,9 +113,9 @@ will not be compatible with the latest version of QTree. A simple
 Perl or awk script may be used to swap the B-value and occupancy columns
 of an old BallStick output file if required.
 
-In the explanations which follow, items enclosed in square brackets 
+**In the explanations which follow, items enclosed in square brackets 
 are optional; items in angle brackets should be replaced by suitable 
-values.
+values.**
 
 
 
@@ -150,21 +150,21 @@ specified. For example:
 ```
 
 If generating ball and stick images after using the BallStick 
-preprocessor, you should use the -b flag. For example:
+preprocessor, you should use the `-b` flag. For example:
    
 ```
       qtree -b -c <ctrl.dat> <file.stk> <file.mtv>
 ```
 
 The size of the square used to perform the calculations may be 
-specified using the -r option. (Defaults to 512). For example:
+specified using the `-r` option. (Defaults to 512). For example:
 
 ```
       qtree -r 256 <file.pdb> <file.mtv>
 ```
 
 The size of the screen used (i.e. the dimensions of the output file)
-are specified with the -s option. (Defaults to 800x600.) For example:
+are specified with the `-s` option. (Defaults to 800x600.) For example:
 
 ```
       qtree -r 256 -s 256 256 <file.pdb> <file.mtv>
@@ -193,7 +193,7 @@ Running Worms
 Required files
 --------------
 
--  ** worms**                The executable program       
+-  **worms**                The executable program       
 
 Running the program
 -------------------
@@ -303,10 +303,11 @@ Documentation
 =============
 
 There is no separate documentation other than what is supplied here
-since there is an extensive help facility built into the QTree program.
-Type `qtree --help` to access this help facility. (N.B. You must either have
-`qtree.hlp` in your current directory, or in the directory pointed to
-by the environment variable `HELPDIR` to access help.)
+since there is an extensive help facility built into the QTree
+program.  Type `qtree --help` to access this help facility. **N.B.** You
+must either have `qtree.hlp` in your current directory, or in the
+directory pointed to by the environment variable `HELPDIR` (or `HELP:`
+under AmigaDOS/VMS) to access help.
 
 A simple command file for QTree, `restype.dat`, is supplied which 
 colours on residue type with a shaded background and specular reflections.
@@ -327,7 +328,7 @@ optional sections. The following values may be changed:
 - **SIZE**          This is the actual image size and must be a power of 2
                     (Overridden with `-r` flag)
 - **XSIZE, YSIZE**  This is the size of the background on which the image will
-                    be placed. Both values must be larger than `SIZE`
+                    be placed. Both values must be larger than **SIZE**
                     (Overridden with `-s` flag)
 - **DEPTHCUE**      If this is not defined, code to handle depth cueing will
                     not be compiled
@@ -347,22 +348,23 @@ Source files
 ------------
 
 *For QTree*
--      **qtree.c**        The QTree program
--      **qtree.h**        Structure definitions, globals and flags
--      **qtree.p**        Prototypes for qtree.c
--      **graphics.c**     Graphics support routines
--      **graphics.p**     Prototypes for graphics.c
--      **commands.c**     Command parser setup and handling
--      **commands.p**     Prototypes for commands.c
--      **writepng.c**     Code to write PNG files  
--      **writepng.h**     PNG writer header file   
+
+- **qtree.c**        The QTree program
+- **qtree.h**        Structure definitions, globals and flags
+- **qtree.p**        Prototypes for qtree.c
+- **graphics.c**     Graphics support routines
+- **graphics.p**     Prototypes for graphics.c
+- **commands.c**     Command parser setup and handling
+- **commands.p**     Prototypes for commands.c
+- **writepng.c**     Code to write PNG files  
+- **writepng.h**     PNG writer header file   
 
 *For Worms*
--      **worms.c**        The Worms program
+- **worms.c**        The Worms program
 
 *For BallStick*
--      **BallStick.c**    The Ball and Stick program
--      **cpk.c**          The CPK program          
+- **BallStick.c**    The Ball and Stick program
+- **cpk.c**          The CPK program          
 
 Additional source files (in `Amiga` directory)
 ----------------------------------------------
@@ -379,11 +381,11 @@ Additional source files (in `Amiga` directory)
 Required library files and includes
 -----------------------------------
 
-The code can be linked with Bioplib if installed, or with source and
+The code can be linked with BiopLib if installed, or with source and
 include files provided in the `bioplib` sub-directory if the packaged
 version is used.
 
-If you include PNG support, you must have the libpng development
+If you include PNG support, you must have the `libpng` development
 library installed.
    
 Possible Future Enhancements
@@ -397,45 +399,45 @@ Possible Future Enhancements
 Revision History
 ================
 
-   V1.0  19.07.93 Original
-   V1.1  28.07.93 Added support for ball and stick
-                  Added B-spline smoothing
-   V1.2  29.07.93 Corrected bug in failure to open file
-                  Added MTV file output support and background colouring
-                  Added support for disulphide bonds
-   V1.3  11.08.93 Corrected usage message
-                  Fixed memory leak
-   V1.4  07.10.93 Fixed bug in FindChainPDB()
-                  Added option to create output file of specifed
-                  dimensions
-                  Removed direct graphic display
-   V1.5  14.09.93 Added sphere scaling option
-   V1.6  04.01.94 Fixed bug in argument parsing
-                  Some externals made static static and added casts for 
-                  GCC
-                  Fixed bug in BSplineSmoothPDB()
-   V1.7  24.03.94 Minimal tidying up
-                  Added SLAB option and warning messages.
-                  Removed ParseResSpec() as this is now in the library
-                  Applies sphere scaling when radius comes from B-value
-   V1.8  09.05.94 Fixed rounding error bug in B-spline smoothing
-   V1.9  13.05.94 Various fixes to B-spline smoothing which was getting
-                  coords out of sync with labels...
-   V1.10 24.06.94 Default colouring may now be done on temperature
-                  factor using command TEMPERATURE
-   V1.11 04.10.94 With -b, reads radii from occ rather than bval
-   V1.12 21.12.94 Improved Usage message
-   V2.0  28.03.95 Modified to allow I/O through pipes
-                  Fixed DoZone() which wasn't working properly for
-                  Ball and Stick images which split the PDB data into
-                  two sections.
-                  Ctrl-C handled properly on non-AmigaDOS systems.
-   V2.1  23.10.95 Warnings and errors all go to stderr
-   V2.2  14.10.03 Added BOUNDS and RADIUS commands
-   V2.2a 18.10.07 Clean compile with -ansi -Wall -pedantic
-   V2.3  18.10.07 Added HIGHIGHT / BORDERWIDTH
-   V2.4  27.01.15 Various changes for new bioplib to ensure chain and
-                  insert are handled as strings
-   V2.5  18.08.19 Further changes for new bioplib and cleaned up compile.
-                  Improved Makefiles; Moved into github
-   V3.0  19.08.19 Added direct PNG output support
+- V1.0  19.07.93 Original
+- V1.1  28.07.93 Added support for ball and stick
+                 Added B-spline smoothing
+- V1.2  29.07.93 Corrected bug in failure to open file
+                 Added MTV file output support and background colouring
+                 Added support for disulphide bonds
+- V1.3  11.08.93 Corrected usage message
+                 Fixed memory leak
+- V1.4  07.10.93 Fixed bug in `FindChainPDB()`
+                 Added option to create output file of specifed
+                 dimensions
+                 Removed direct graphic display
+- V1.5  14.09.93 Added sphere scaling option
+- V1.6  04.01.94 Fixed bug in argument parsing
+                 Some externals made static static and added casts for 
+                 GCC
+                 Fixed bug in `BSplineSmoothPDB()`
+- V1.7  24.03.94 Minimal tidying up
+                 Added SLAB option and warning messages.
+                 Removed `ParseResSpec()` as this is now in the library
+                 Applies sphere scaling when radius comes from B-value
+- V1.8  09.05.94 Fixed rounding error bug in B-spline smoothing
+- V1.9  13.05.94 Various fixes to B-spline smoothing which was getting
+                 coords out of sync with labels...
+- V1.10 24.06.94 Default colouring may now be done on temperature
+                 factor using command `TEMPERATURE`
+- V1.11 04.10.94 With -b, reads radii from occ rather than bval
+- V1.12 21.12.94 Improved Usage message
+- V2.0  28.03.95 Modified to allow I/O through pipes
+                 Fixed `DoZone()` which wasn't working properly for
+                 Ball and Stick images which split the PDB data into
+                 two sections.
+                 `Ctrl-C` handled properly on non-AmigaDOS systems.
+- V2.1  23.10.95 Warnings and errors all go to stderr
+- V2.2  14.10.03 Added `BOUNDS` and `RADIUS` commands
+- V2.2a 18.10.07 Clean compile with `-ansi -Wall`
+- V2.3  18.10.07 Added `HIGHIGHT` / `BORDERWIDTH`
+- V2.4  27.01.15 Various changes for new BiopLib to ensure chain and
+                 insert are handled as strings
+- V2.5  18.08.19 Further changes for new BiopLib and cleaned up compile.
+                 Improved Makefiles; Moved into GitHub
+- V3.0  19.08.19 Added direct PNG output support
