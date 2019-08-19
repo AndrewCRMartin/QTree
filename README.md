@@ -56,8 +56,6 @@ that they may be incorporated into future versions of the code.
 
 The code may not be sold commercially or used for commercial purposes
 without prior permission from the author.
-```
-
 
 
 Introduction
