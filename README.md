@@ -125,6 +125,7 @@ Running QTree
    Required files
    --------------
 
+| File            | Description |
 | --------------- | ---------------------------------------------------- |
 |  qtree          |     The executable program |
 |  qtree.hlp      |     The help file. This should be in the current     |
@@ -132,7 +133,6 @@ Running QTree
 |                 |     HELP: (VMS/AmigaDOS), or in a directory whose    |
 |                 |     name is placed in the environment variable       |
 |                 |     HELPDIR (Unix)       |
-| --------------- | ---------------------------------------------------- |
    
    
    Running the program
