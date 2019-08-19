@@ -61,20 +61,20 @@ without prior permission from the author.
 Introduction
 ============
 
-   QTree is a program for generating CPK (Corey, Pauling, Koltun)
+   *QTree* is a program for generating CPK (Corey, Pauling, Koltun)
 space-filling pictures of molecules from PDB files.  It can also
 generate worms and ball-and-stick images using preprocessing filters.
 The code is written to be as portable as possible. Only the routines
 in graphics.c need to be changed to support the display device being
 used.
 
-   QTree and its support programs, CPK, Worms and BallStick have been
-compiled and tested on Commodore Amiga, Silicon Graphics and Evans &
-Sutherland ESV running Unix (native compilers), and on a PC running
-Linux (Gnu C compiler).  It should run on anything else with no
-problems!
+   *QTree* and its support programs, *CPK*, *Worms* and *BallStick*
+have been compiled and tested on Commodore Amiga, Silicon Graphics and
+Evans & Sutherland ESV running Unix (native compilers), and on a PC
+running Linux (Gnu C compiler).  It should run on anything else with
+no problems!
 
-   As of V1.5 of QTree, graphics.c has been changed simply to create
+   As of V1.5 of *QTree*, `graphics.c` has been changed simply to create
 a 24bit RGB image in MTV raytracer format. No direct graphics device
 support is provided. You are encouraged to maintain this form and
 thus to write a separate utility to display MTV files on your graphics
@@ -88,17 +88,19 @@ ImageMagick display program. The convert program from the ImageMagick
 package may be used in a pipeline to generate GIF output (or whatever
 other form you prefer).
 
-   Worms is a preprocessor program for QTree which allows the generation 
+   As of V3.0, there is native support for PNG output as well as MTV output. 
+
+   *Worms* is a preprocessor program for QTree which allows the generation 
 of worm style images showing a B-spline smoothed image of the C-alpha 
 trace. It reads a PDB file and writes a PDB file containing the 
 interpolated smoothed atom positions necessary to generate the worms 
 image.
 
-   BallStick is a preprocessor program for QTree which allows the 
+   *BallStick* is a preprocessor program for QTree which allows the 
 generation of ball and stick style images. It reads a PDB file and writes 
 a PDB file containing interpolated sphere positions along each bond.
 
-   CPK is a preprocessor program for QTree which places the default
+   *CPK* is a preprocessor program for QTree which places the default
 atom radii in the occupancy column. This allows BallStick and CPK
 representations to be combined in one image.
 
@@ -110,8 +112,6 @@ that BallStick output files generated with versions prior to V1.11
 will not be compatible with the latest version of QTree. A simple
 Perl or awk script may be used to swap the B-value and occupancy columns
 of an old BallStick output file if required.
-
-   As of V3.0, there is native support for PNG output as well as MTV output. 
 
    In the explanations which follow, items enclosed in square brackets 
 are optional; items in angle brackets should be replaced by suitable 
@@ -125,12 +125,14 @@ Running QTree
    Required files
    --------------
 
+| --------------- | ---------------------------------------------------- |
 |  qtree          |     The executable program |
 |  qtree.hlp      |     The help file. This should be in the current     |
 |                 |     directory, or a directory with the logical name  |
 |                 |     HELP: (VMS/AmigaDOS), or in a directory whose    |
 |                 |     name is placed in the environment variable       |
 |                 |     HELPDIR (Unix)       |
+| --------------- | ---------------------------------------------------- |
    
    
    Running the program
