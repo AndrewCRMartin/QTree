@@ -111,6 +111,8 @@ will not be compatible with the latest version of QTree. A simple
 Perl or awk script may be used to swap the B-value and occupancy columns
 of an old BallStick output file if required.
 
+   As of V3.0, there is native support for PNG output as well as MTV output. 
+
    In the explanations which follow, items enclosed in square brackets 
 are optional; items in angle brackets should be replaced by suitable 
 values.
@@ -122,13 +124,13 @@ Running QTree
 
    Required files
    --------------
-   
-   qtree                The executable program
-   qtree.hlp            The help file. This should be in the current
-                        directory, or a directory with the logical name
-                        HELP: (VMS/AmigaDOS), or in a directory whose
-                        name is placed in the environment variable
-                        HELPDIR (Unix)
+
+|  qtree          |     The executable program |
+|  qtree.hlp      |     The help file. This should be in the current     |
+|                 |     directory, or a directory with the logical name  |
+|                 |     HELP: (VMS/AmigaDOS), or in a directory whose    |
+|                 |     name is placed in the environment variable       |
+|                 |     HELPDIR (Unix)       |
    
    
    Running the program
@@ -178,7 +180,7 @@ tracer. This may be displayed using the ImageMagick package under Unix.
    
 ```
       qtree -h
-      ```
+```
       
       
 
@@ -189,7 +191,7 @@ Running Worms
    Required files
    --------------
 
-   worms                The executable program
+|   worms        |        The executable program       |
 
    Running the program
    -------------------
@@ -220,7 +222,7 @@ Running BallStick
    Required files
    --------------
    
-   ballstick            The executable program
+|   ballstick    |        The executable program       |
    
    Running the program
    -------------------
@@ -256,7 +258,7 @@ Running CPK
    Required files
    --------------
    
-   cpk                  The executable program
+|  cpk            |     The executable program       |
    
    Running the program
    -------------------
@@ -323,105 +325,110 @@ name of the C compiler for your system if required. You may also modify
 qtree.h to change some default values and switch off compilation of some
 optional sections. The following values may be changed:
 
-SIZE            This is the actual image size and must be a power of 2
-                (Overridden with -r flag)
-XSIZE, YSIZE    This is the size of the background on which the image will
-                be placed. Both values must be larger than SIZE
-                (Overridden with -s flag)
-DEPTHCUE        If this is not defined, code to handle depth cueing will
-                not be compiled
-SPEC            If this is not defined, code to handle specular reflections
-                will not be compiled
-SHOW_INFO       If this defined, the run time and pixel saturation will be
-                shown at the end of the run. ESVs don't seem to have the
-                required system calls...
-OVERLAP_SLAB    If defined, Z-slab regions will include any atoms which
-                partially overlap the slab region; if not the centre of
-                the atom must be within the region.
+|SIZE           | This is the actual image size and must be a power of 2|
+|               | (Overridden with -r flag)|
+|XSIZE, YSIZE   | This is the size of the background on which the image will|
+|               | be placed. Both values must be larger than SIZE|
+|               | (Overridden with -s flag)|
+|DEPTHCUE       | If this is not defined, code to handle depth cueing will|
+|               | not be compiled|
+|SPEC           | If this is not defined, code to handle specular reflections|
+|               | will not be compiled|
+|SHOW_INFO      | If this defined, the run time and pixel saturation will be|
+|               | shown at the end of the run. ESVs don't seem to have the|
+|               | required system calls...|
+|OVERLAP_SLAB   | If defined, Z-slab regions will include any atoms which|
+|               | partially overlap the slab region; if not the centre of|
+|               | the atom must be within the region.|
 
 
 Below are listed the files contained in this distribution
 
-   Source files
-   ------------
-      qtree.c        The QTree program
-      qtree.h        Structure definitions, globals and flags
-      qtree.p        Prototypes for qtree.c
-      graphics.c     Graphics support routines
-      graphics.p     Prototypes for graphics.c
-      commands.c     Command parser setup and handling
-      commands.p     Prototypes for commands.c
+Source files
+------------
 
-      worms.c        The Worms program
+|      qtree.c   |      The QTree program|
+|      qtree.h   |      Structure definitions, globals and flags|
+|      qtree.p   |      Prototypes for qtree.c|
+|      graphics.c|     Graphics support routines|
+|      graphics.p|     Prototypes for graphics.c|
+|      commands.c|     Command parser setup and handling|
+|      commands.p|     Prototypes for commands.c|
+| writepng.c     |     Code to write PNG files  |
+| writepng.h     |     PNG writer header file   |
+|                |                              |
+|      worms.c   |       The Worms program|
+|                |                              |
+|     BallStick.c|    The Ball and Stick program|
+|      cpk.c     |     The CPK program          |
+
+Additional source files (in `Amiga` directory)
+----------------------------------------------
+
+|      ColourGraphics.c  |An example of driving colour graphics directly|
+|                        |(replaces graphics.c)|
+|      GreyGraphics.c    |An example of driving grey-scale graphics directly|
+|                        |(replaces graphics.c)|
+|      mtvham.c          |Code to display an MTV file in HAM mode on the |
+|                        |Commodore Amiga|
+|      ReadMTV.c         |Code to read an MTV graphics file|
+
       
-      BallStick.c    The Ball and Stick program
-      cpk.c          The CPK program
+Required library files and includes
+-----------------------------------
 
-   Additional source files
-   -----------------------
-      ColourGraphics.c  An example of driving colour graphics directly
-                        (replaces graphics.c)
-      GreyGraphics.c    An example of driving grey-scale graphics directly
-                        (replaces graphics.c)
-      mtvham.c          Code to display an MTV file in HAM mode on the 
-                        Commodore Amiga
-      ReadMTV.c         Code to read an MTV graphics file
-
-      
-   Required library files and includes
-   -----------------------------------
-      These should be placed in a sub-directory of the QTree directory
+These should be placed in a sub-directory of the QTree directory
       called `bioplib'.
    
-      macros.h          Generally useful C programming macros
-      MathType.h        Maths type definitions
-      SysDefs.h         General system type definitions
-      pdb.h             PDB structure definitions and library prototypes
-      help.h            Help interface prototype include
-      parse.h           Command line parser defines and prototype include
-      general.h         General C library routine prototype include
-      matrix.h          Matrix handling prototype include
-      WindIO.h          Window I/O routine prototype include
-      fsscanf.h         Hard formatted string scan include
-      CursWind.h        Curses/windowing prototype include
-      angle.h           Angle calculation include
-      array.h           2D array creation include
+|      macros.h          |Generally useful C programming macros|
+|      MathType.h        |Maths type definitions|
+|      SysDefs.h         |General system type definitions|
+|      pdb.h             |PDB structure definitions and library prototypes|
+|      help.h            |Help interface prototype include|
+|      parse.h           |Command line parser defines and prototype include|
+|      general.h         |General C library routine prototype include|
+|      matrix.h          |Matrix handling prototype include|
+|      WindIO.h          |Window I/O routine prototype include|
+|      fsscanf.h         |Hard formatted string scan include|
+|      CursWind.h        |Curses/windowing prototype include|
+|      angle.h           |Angle calculation include|
+|      array.h           |2D array creation include|
+|                        |                         |
+|      RotPDB.c          |Rotate a PDB linked list|
+|      ReadPDB.c         |Read a PDB file|
+|      WritePDB.c        |Write a PDB file|
+|      help.c            |Help file handler|
+|      matrix.c          |Matrix manipulation routines|
+|      parse.c           |Comman line parser|
+|      general.c         |General routines|
+|      fsscanf.c         |Hard formatted string scan|
+|      WindIO.c          |Window I/O routines|
+|      ModPDB.c          |Modify coordinates in a PDB linked list|
+|      ApMatPDB.c        |Apply a rotation matrix to a PDB linked list|
+|      OrigPDB.c         |Move a PDB linked list to origin|
+|      GetCGPDB.c        |Get centre of geometry from a PDB linked list|
+|      ParseRes.c        |Parse a residue specification|
+|      CalcPDB.c         |Perform calculations on PDB linked list|
+|      PDBList.c         |Manipulate PDB linked list|
+|      array.c           |2D array generation code|
+|      angle.c           |Angle and torsion calculation code|
 
-      RotPDB.c          Rotate a PDB linked list
-      ReadPDB.c         Read a PDB file
-      WritePDB.c        Write a PDB file
-      help.c            Help file handler
-      matrix.c          Matrix manipulation routines
-      parse.c           Comman line parser
-      general.c         General routines
-      fsscanf.c         Hard formatted string scan
-      WindIO.c          Window I/O routines
-      ModPDB.c          Modify coordinates in a PDB linked list
-      ApMatPDB.c        Apply a rotation matrix to a PDB linked list
-      OrigPDB.c         Move a PDB linked list to origin
-      GetCGPDB.c        Get centre of geometry from a PDB linked list
-      ParseRes.c        Parse a residue specification
-      CalcPDB.c         Perform calculations on PDB linked list
-      PDBList.c         Manipulate PDB linked list
-      array.c           2D array generation code
-      angle.c           Angle and torsion calculation code
 
-
-   N.B. Compiling on MS-DOS machines will require modification of the
-   path names for include files to reflect the backslash path separator
-   (i.e. change bioplib/... to bioplib\...). The VAX/VMS C compiler is 
-   intelligent enough to cope with slash separted paths even though VMS 
-   uses a dot (.) to separate paths.  A number of the filenames are too 
-   long for use with MS-DOS and these will also have to be changed. 
-   (Suggestion: use a decent operating system like Linux!!)
+N.B. Compiling on MS-DOS machines will require modification of the
+path names for include files to reflect the backslash path separator
+(i.e. change bioplib/... to bioplib\...). The VAX/VMS C compiler is 
+intelligent enough to cope with slash separted paths even though VMS 
+uses a dot (.) to separate paths.  A number of the filenames are too 
+long for use with MS-DOS and these will also have to be changed. 
+(Suggestion: use a decent operating system like Linux!!)
 
 
 Possible Future Enhancements
 ============================
 
-   1. Progress indicator
-   2. Non-square image support
-   3. Colour by CHAIN
+1. Progress indicator
+2. Non-square image support
+3. Colour by CHAIN
    
 
 Revision History
@@ -468,4 +475,5 @@ Revision History
                   insert are handled as strings
    V2.5  18.08.19 Further changes for new bioplib and cleaned up compile.
                   Improved Makefiles; Moved into github
-
+   V3.0  19.08.19 Added direct PNG output support
+   
