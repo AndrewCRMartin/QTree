@@ -3,12 +3,12 @@
    Program:    QTree
    File:       qtree.h
    
-   Version:    V2.3
-   Date:       18.10.07
+   Version:    V3.0
+   Date:       19.09.19
    Function:   Include file for QTree
    
-   Copyright:  (c) SciTech Software 1993-2007
-   Author:     Dr. Andrew C. R. Martin
+   Copyright:  (c) SciTech Software 1993-2019
+   Author:     Prof. Andrew C. R. Martin
    EMail:      andrew@bioinf.org.uk
                
 **************************************************************************
@@ -75,6 +75,7 @@
    V2.1  23.10.95 Skipped
    V2.2  14.10.03 Added BOUNDS and RADIUS stuff
    V2.3  18.10.07 Added highlight stuff
+   V3.0  19.08.19 Added PNG support
 
 *************************************************************************/
 
@@ -97,6 +98,12 @@
                            slab region                                  */
 
 /************************************************************************/
+/* Output formats
+*/
+#define OUTPUT_MTV  0         /* MTV format (default)                   */
+#define OUTPUT_PNG  1         /* PNG format                             */
+
+/************************************************************************/
 /* Defines
 */
 #define SIZE  512             /* Display size (square) 256              */
@@ -109,7 +116,6 @@
 /************************************************************************/
 /* Structure type definitions
 */
-
 typedef struct
 {
    REAL  x, y, z,
@@ -170,7 +176,6 @@ DCUE   gDepthCue;          /* Depthcue info                             */
 REAL   gScale     = 0.9,   /* Scaling factor                            */
        gSphScale  = 1.0;   /* Sphere scaling factor                     */
 VEC3F  gMidPoint;          /* Mid point of structure for centering      */
-char   gOutFile[160];      /* Output file name                          */
 int    gSize = SIZE,       /* Display size                              */
        gScreen[2],         /* Screen size                               */
        gBorderWidth = DEF_BORDERWIDTH; /* Border width for HIGHLIGHT    */

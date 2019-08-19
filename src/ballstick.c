@@ -3,8 +3,8 @@
    Program:    BallStick
    File:       BallStick.c
    
-   Version:    V2.5
-   Date:       28.08.19
+   Version:    V3.0
+   Date:       19.08.19
    Function:   Preprocessor for QTree to create a Ball & Stick image
    
    Copyright:  (c) SciTech Software 1993-2019
@@ -83,6 +83,7 @@
    V2.3  18.10.07 Skipped
    V2.4  27.01.15 Updated for new bioplib
    V2.5  18.08.19 General cleanup and moved into GitHub
+   V3.0  19.08.19 Added PNG support
 
 *************************************************************************/
 /* Includes
@@ -111,7 +112,7 @@ static BOOL gMaxSpecified = FALSE;
 
 #ifdef _AMIGA
 /* Version string                                                       */
-static unsigned char *sVers="\0$VER: BallStick V2.5 - SciTech Software, \
+static unsigned char *sVers="\0$VER: BallStick V3.0 - SciTech Software, \
 1993-2007";
 #endif
 
@@ -144,6 +145,7 @@ void UsageExit(void);
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 int main(int argc, char **argv)
 {
@@ -169,7 +171,7 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nBallStick V2.5\n");
+            fprintf(stderr,"\nBallStick V3.0\n");
             fprintf(stderr,"==============\n");
             fprintf(stderr,"Ball and Stick program for use with QTree. \
 SciTech Software\n");
@@ -526,10 +528,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 void UsageExit(void)
 {
-   fprintf(stderr,"\nBallStick V2.5 (c) 1993-2019 Prof. Andrew C.R. \
+   fprintf(stderr,"\nBallStick V3.0 (c) 1993-2019 Prof. Andrew C.R. \
 Martin, SciTech Software\n\n");
    
    fprintf(stderr,"Usage: BallStick [-q] [-n <n>] [-b <r>] [-s <r>] [-d] \

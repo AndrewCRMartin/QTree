@@ -43,6 +43,7 @@
                   either dimension is smaller than the resolution 
                   specified with -r, the resolution will be reduced.
       -c <file>   Specify a control file - see below.
+      -o <fmt>    Specify the output format (mtv or png) - default mtv
    
    You can create a defaults file (which must be named `qtree.def') to 
    create new defaults, or you can specify a control file on the command 

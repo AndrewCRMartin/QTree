@@ -3,8 +3,8 @@
    Program:    CPK
    File:       cpk.c
    
-   Version:    V2.5
-   Date:       18.08.19
+   Version:    V3.0
+   Date:       19.08.19
    Function:   Size pre-processor for QTree to create CPK images
    
    Copyright:  (c) SciTech Software 1995-2019
@@ -60,6 +60,7 @@
    V2.3  18.10.07 Skipped
    V2.4  27.01.15 Skipped
    V2.5  18.08.19 General cleanup and moved into GitHub
+   V3.0  19.08.19 Added PNG support
 
 *************************************************************************/
 /* Includes
@@ -95,7 +96,7 @@ void Usage(void);
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: CPK V2.5 - SciTech Software, 1995-2019";
+   *sVers="\0$VER: CPK V3.0 - SciTech Software, 1995-2019";
 #endif
 
 /************************************************************************/
@@ -149,10 +150,11 @@ int main(int argc, char **argv)
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 void Banner(void)
 {
-   fprintf(stderr,"\nCPK V2.5\n");
+   fprintf(stderr,"\nCPK V3.0\n");
    fprintf(stderr,"========\n");
    fprintf(stderr,"CPK preprocessor for QTree. SciTech Software\n");
    fprintf(stderr,"Copyright (C) 1995-2019 SciTech Software. All Rights \
@@ -274,10 +276,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nCPK V2.5 (c) 1995-2019, SciTech Software\n\n");
+   fprintf(stderr,"\nCPK V3.0 (c) 1995-2019, SciTech Software\n\n");
 
    fprintf(stderr,"Usage: cpk [-q] [in.pdb [out.pdb]]\n");
    fprintf(stderr,"       -q Operate quietly\n\n");

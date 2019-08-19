@@ -40,7 +40,7 @@ SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
 BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
                   BOOL *DoControl, char *ControlFile, BOOL *DoBallStick, 
                   BOOL *DoResolution, int *resolution, BOOL *quiet,
-                  int *screenx, int *screeny)
+                  int *screenx, int *screeny, int *outFormat)
 ;
 void UsageExit(BOOL ShowHelp)
 ;

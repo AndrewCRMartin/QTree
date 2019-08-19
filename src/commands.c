@@ -3,8 +3,8 @@
    Program:    QTree
    File:       commands.c
    
-   Version:    V2.5
-   Date:       18.08.19
+   Version:    V3.0
+   Date:       19.08.19
    Function:   Handle command files for QTree program
    
    Copyright:  (c) SciTech Software 1993-2019
@@ -82,6 +82,7 @@
    V2.3  18.10.07 Added HIGHLIGHT command
    V2.4  27.01.15 Modifications for new version of BiopLib
    V2.5  18.08.19 General cleanup and moved into GitHub
+   V3.0  19.08.19 Added PNG support
 
 *************************************************************************/
 /* Includes

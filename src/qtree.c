@@ -3,8 +3,8 @@
    Program:    QTree
    File:       qtree.c
    
-   Version:    V2.5
-   Date:       18.08.19
+   Version:    V3.0
+   Date:       19.08.19
    Function:   Use quad-tree algorithm to display a molecule
    
    Copyright:  (c) SciTech Software 1993-2019
@@ -102,6 +102,7 @@
    V2.4  27.01.15 Various changes for new bioplib to ensure chain and
                   insert are handled as strings
    V2.5  18.08.19 General cleanup and moved into GitHub
+   V3.0  19.08.19 Started to add different output formats
 
 *************************************************************************/
 /* Includes
@@ -156,7 +157,7 @@ static int     sNPixels = 0;        /* Number of pixels coloured        */
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: QTree V2.5 - SciTech Software, 1993-2019";
+   *sVers="\0$VER: QTree V3.0 - SciTech Software, 1993-2019";
 #endif
 
 
@@ -192,6 +193,7 @@ static unsigned char
    18.02.96 V2.1c
    14.10.03 V2.2
    18.10.07 V2.2a Cast added to onbreak()
+   19.08.19 Added PNG output
 */
 int main(int argc, char **argv)
 {
@@ -203,9 +205,11 @@ int main(int argc, char **argv)
             DoResolution   = FALSE,
             Quiet          = FALSE;
    int      NAtom          = 0,
-            resolution     = 0;
+            resolution     = 0,
+            outFormat      = OUTPUT_MTV;
    char     ControlFile[160],
-            InFile[160];
+            InFile[160],
+            outFile[160];
             
 #ifdef SHOW_INFO
    clock_t  StartTime,
@@ -247,9 +251,9 @@ int main(int argc, char **argv)
    gSlab.z     = 0.0;
    gSlab.depth = 1000.0;
 
-   if(ParseCmdLine(argc, argv, InFile, gOutFile, &DoControl, ControlFile,
+   if(ParseCmdLine(argc, argv, InFile, outFile, &DoControl, ControlFile,
                    &sBallStick, &DoResolution, &resolution, &Quiet,
-                   &(gScreen[0]), &(gScreen[1])))
+                   &(gScreen[0]), &(gScreen[1]), &outFormat))
    {
       /* If the resolution flag has been set, calculate the resolution  */
       if(DoResolution)
@@ -278,7 +282,7 @@ int main(int argc, char **argv)
       /* Banner message                                                 */
       if(!Quiet)
       {
-         fprintf(stderr,"\nQTree V2.5\n");
+         fprintf(stderr,"\nQTree V3.0\n");
          fprintf(stderr,"========== \n");
          fprintf(stderr,"CPK program for PDB files. SciTech Software\n");
          fprintf(stderr,"Copyright (C) 1993-2019 SciTech Software. All \
@@ -368,7 +372,7 @@ sphere list.\n");
       StopTime = clock();
 #endif
       
-      EndGraphics();
+      EndGraphics(outFile, outFormat);
       
 #ifdef SHOW_INFO
       if(OK && !Quiet)
@@ -989,6 +993,7 @@ void ColourPixel(int xi, int yi, SPHERE **spheres, int NSphere)
                }
             }
          }
+         
          if(border)
          {
             for(xx = xi-gBorderWidth; xx <= xi; xx++)
@@ -1346,7 +1351,7 @@ SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
                      BOOL *DoControl, char *ControlFile, 
                      BOOL *DoBallStick, 
                      BOOL *DoResolution, int *resolution, BOOL *quiet,
-                     int *screenx, int *screeny)
+                     int *screenx, int *screeny, int *outFormat)
    ---------------------------------------------------------------------
    Input:   int    argc               Argument count
             char   **argv             Argument array
@@ -1360,16 +1365,18 @@ SPHERE *SlabSphereList(SPHERE *spheres, int *Natom)
             BOOL   *Quiet             Operate quietly
             int    *screenx           X image size
             int    *screeny           Y image size
+            int    *outFormat         Output format
    Returns: BOOL                      Success?
 
    Parse the command line
    
    28.03.95 Original    By: ACRM
+   19.08.19 Added outFormat
 */
 BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile, 
                   BOOL *DoControl, char *ControlFile, BOOL *DoBallStick, 
                   BOOL *DoResolution, int *resolution, BOOL *quiet,
-                  int *screenx, int *screeny)
+                  int *screenx, int *screeny, int *outFormat)
 {
    argc--;
    argv++;
@@ -1418,6 +1425,26 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
             sscanf(argv[0],"%d",screenx);
             argc--;  argv++;
             sscanf(argv[0],"%d",screeny);
+            break;
+         case 'o':
+         case 'O':
+            argc--;  argv++;
+            LOWER(argv[0]);
+            if(!strncmp(argv[0], "mtv", 3))
+            {
+               *outFormat = OUTPUT_MTV;
+            }
+#ifdef SUPPORT_PNG
+            else if(!strncmp(argv[0], "png", 3))
+            {
+               *outFormat = OUTPUT_PNG;
+            }
+#endif
+            else
+            {
+               fprintf(stderr, "Unknown output format: %s\n", argv[0]);
+               exit(1);
+            }
             break;
          default:
             return(FALSE);
@@ -1470,6 +1497,7 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 void UsageExit(BOOL ShowHelp)
 {
@@ -1480,11 +1508,11 @@ void UsageExit(BOOL ShowHelp)
    }
    else
    {
-      fprintf(stderr,"\nQTree V2.5 (c) 1993-2019 Prof. Andrew C.R. \
+      fprintf(stderr,"\nQTree V3.0 (c) 1993-2019 Prof. Andrew C.R. \
 Martin, SciTech Software\n\n");
       
       fprintf(stderr,"Usage: qtree [-q] [-b] [-c <control.dat>] [-r <n>] \
-[-s <x> <y>] [<file.pdb> [<file.mtv>]]\n");
+[-o fmt] [-s <x> <y>] [<file.pdb> [<file.mtv>]]\n");
       fprintf(stderr,"       qtree [-h]\n\n");
       fprintf(stderr,"       -q Operate quietly\n");
       fprintf(stderr,"       -b Interpret occupancy as radius for ball \
@@ -1492,10 +1520,12 @@ Martin, SciTech Software\n\n");
       fprintf(stderr,"       -c Specify control file\n");
       fprintf(stderr,"       -r Specify pixel resolution (power of 2) \
 [%d]\n", SIZE);
-      fprintf(stderr,"       -s Specify screen size [%d %d]\n",
+      fprintf(stderr,"       -s Specify screen size (%d %d)\n",
              XSIZE,YSIZE);
-      fprintf(stderr,"       -h Enter help utility\n\n");
-      fprintf(stderr,"       Output is in MTV raytracer format\n\n");
+      fprintf(stderr,"       -h Enter help utility\n");
+      fprintf(stderr,"       -o Specify output format (mtv|png)\n\n");
+      fprintf(stderr,"       Default output is in MTV raytracer \
+format\n\n");
       fprintf(stderr,"       Render a space filling picture of a PDB \
 file\n");
       fprintf(stderr,"       Enter qtree -h to enter the help program\n");

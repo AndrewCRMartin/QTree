@@ -3,8 +3,8 @@
    Program:    QTree
    File:       graphics.c
    
-   Version:    V2.5
-   Date:       27.01.19
+   Version:    V3.0
+   Date:       19.08.19
    Function:   Display routines for QTree
    
    Copyright:  (c) SciTech Software 1993-2019
@@ -76,6 +76,7 @@
    V2.3  18.10.03 Skipped
    V2.4  27.01.15 Skipped
    V2.5  18.08.19 General cleanup and moved into GitHub
+   V3.0  19.08.19 Added PNG support
 
 *************************************************************************/
 /* Includes
@@ -143,6 +144,7 @@ BOOL InitGraphics(void)
    return(TRUE);
 }
 
+
 /************************************************************************/
 /*>void EndGraphics(void)
    ----------------------
@@ -154,11 +156,25 @@ BOOL InitGraphics(void)
    12.08.93 Modified for screen size specification
    04.01.94 Added casts on blFreeArray2D
    28.03.95 No longer checks file specified
+   19.08.19 Now takes filename and type as a parameter
 */
-void EndGraphics(void)
+void EndGraphics(char *outFile, int outFormat)
 {
    /* Write the file in MTV format                                      */
-   WriteMTVFile(gOutFile,gScreen[0],gScreen[1]);
+   switch(outFormat)
+   {
+   case OUTPUT_MTV:
+      WriteMTVFile(outFile,gScreen[0],gScreen[1]);
+      break;
+#ifdef SUPPORT_PNG
+   case OUTPUT_PNG:
+      WritePNGFile(outFile,gScreen[0],gScreen[1]);
+      break;
+#endif
+   default:
+      fprintf(stderr, "Error: Unknown output format! Using MTV");
+      WriteMTVFile(outFile,gScreen[0],gScreen[1]);
+   }
 
    /* Free memory for RGB arrays                                        */
    if(sRed   != NULL) blFreeArray2D((char **)sRed,   
@@ -172,6 +188,7 @@ void EndGraphics(void)
    sGreen = NULL;
    sBlue  = NULL;
 }
+
 
 /************************************************************************/
 /*>void SetPixel(int x0, int y0, REAL r, REAL g, REAL b)
@@ -208,6 +225,7 @@ void SetPixel(int x0, int y0, REAL r, REAL g, REAL b)
    }
 }
 
+
 /************************************************************************/
 /*>void SetAbsPixel(int x0, int y0, REAL r, REAL g, REAL b)
    --------------------------------------------------------
@@ -222,9 +240,7 @@ void SetAbsPixel(int x0, int y0, REAL r, REAL g, REAL b)
 {
    int temp;
 
-/*   y0 = gScreen[1] - y0 - 1;
-*/
-   
+
    temp = (int)(256.0 * r + 0.5);
    sRed[x0][y0]   = (temp > 255) ? 255 : temp;
    
@@ -280,5 +296,58 @@ BOOL WriteMTVFile(char *FileName, int xsize, int ysize)
    return(FALSE);
 }
 
+
+#ifdef SUPPORT_PNG
+#include "writepng.h"
+/************************************************************************/
+/*>BOOL WritePNGFile(char *FileName, int xsize, int ysize)
+   -------------------------------------------------------
+   Write a graphics file in PNG format
+
+   19.08.19 Original    By: ACRM
+*/
+BOOL WritePNGFile(char *FileName, int xsize, int ysize)
+{
+   int   x, y;
+   blPNGIMAGE image;
+   BOOL retval = TRUE;
+   
+   if(sRed==NULL || sGreen == NULL || sBlue==NULL) 
+      return(FALSE);
+
+   image.width  = xsize;
+   image.height = ysize;
+   if((image.pixels = (blPNGPIXEL *)calloc(xsize*ysize,
+                                           sizeof(blPNGPIXEL)))==NULL)
+   {
+      return(FALSE);
+   }
+   
+   /* Copy the image over into the blPNGIMAGE bitmap                     */
+   for(y=0; y<ysize; y++)
+   {
+      for(x=0; x<xsize; x++)
+      {
+         blPNGPIXEL *pixel = blPNGPixelAt(&image, x, y);
+
+         pixel->red   = (int)sRed[x][y];
+         pixel->green = (int)sGreen[x][y];
+         pixel->blue  = (int)sBlue[x][y];
+      }
+   }
+
+   /* Write the image to the file or stdout if FileName is a NULL string */
+   if(!blSavePNGToFile(&image, FileName)) 
+   {
+      fprintf(stderr, "Error writing file.\n");
+      retval = FALSE;
+   }
+   
+   free(image.pixels);
+   
+   return(retval);
+}
+
+#endif
 
 

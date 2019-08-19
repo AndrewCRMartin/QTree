@@ -3,8 +3,8 @@
    Program:    Worms
    File:       worms.c
    
-   Version:    V2.5
-   Date:       18.08.19
+   Version:    V3.0
+   Date:       19.08.19
    Function:   Preprocessor for QTree to create a worms image
    
    Copyright:  (c) SciTech Software 1993-2019
@@ -81,6 +81,7 @@
    V2.3  18.10.07 Added highlight stuff
    V2.4  27.01.15 Changed to use CHAINMATCH() macro
    V2.5  18.08.19 General cleanup and moved into GitHub
+   V3.0  19.08.19 Added PNG support
 
 *************************************************************************/
 /* Includes
@@ -107,7 +108,7 @@ static int sTotalCAlpha = 0;
 #ifdef _AMIGA
 /* Version string                                                       */
 static unsigned char 
-   *sVers="\0$VER: Worms V2.5  SciTech Software, 1993-2019";
+   *sVers="\0$VER: Worms V3.0  SciTech Software, 1993-2019";
 #endif
 
 /************************************************************************/
@@ -146,6 +147,7 @@ void Usage(void);
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 int main(int argc, char **argv)
 {
@@ -174,7 +176,7 @@ int main(int argc, char **argv)
          /* Banner message                                              */
          if(!Quiet)
          {
-            fprintf(stderr,"\nWorms V2.5\n");
+            fprintf(stderr,"\nWorms V3.0\n");
             fprintf(stderr,"==========\n");
             fprintf(stderr,"Worms program for use with QTree. SciTech \
 Software\n");
@@ -942,10 +944,11 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    18.10.07 V2.3
    27.01.15 V2.4
    18.08.19 V2.5
+   19.08.19 V3.0
 */
 void Usage(void)
 {
-   fprintf(stderr,"\nWorms V2.5 (c) 1993-2019 Prof. Andrew C.R. Martin, \
+   fprintf(stderr,"\nWorms V3.0 (c) 1993-2019 Prof. Andrew C.R. Martin, \
 SciTech Software\n\n");
    fprintf(stderr,"Usage: worms [-q] [-n <n>] [-d] [-s <n>] [<in.pdb> \
 [<out.pdb>]]\n");
