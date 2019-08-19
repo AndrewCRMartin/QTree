@@ -5,7 +5,7 @@
 # V1.1  18.06.96 Added bioplib/ZonePDB.c
 
 BIOP=${HOME}/git/bioplib/src
-QTREE=QTreeV2.5
+QTREE=QTreeV3.0
 QTBIOP=$QTREE/bioplib
 QTEXTRAS=$QTREE/extras
 

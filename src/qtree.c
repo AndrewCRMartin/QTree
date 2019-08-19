@@ -1385,9 +1385,12 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
    
    while(argc)
    {
-      if(!strncmp(argv[0],"-help",5) ||
-         !strncmp(argv[0],"-HELP",5))
+      if(!strncmp(argv[0],"-help",5)  ||
+         !strncmp(argv[0],"-HELP",5)  ||
+         !strncmp(argv[0],"--help",5) ||
+         !strncmp(argv[0],"--HELP",5))
       {
+         UsageExit(TRUE);
          return(FALSE);
       }
       
@@ -1403,7 +1406,7 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
             break;
          case 'h':
          case 'H':
-            UsageExit(TRUE);
+            return(FALSE);
             break;
          case 'b':
          case 'B':
@@ -1426,8 +1429,8 @@ BOOL ParseCmdLine(int argc, char **argv, char *infile, char *outfile,
             argc--;  argv++;
             sscanf(argv[0],"%d",screeny);
             break;
-         case 'o':
-         case 'O':
+         case 'f':
+         case 'F':
             argc--;  argv++;
             LOWER(argv[0]);
             if(!strncmp(argv[0], "mtv", 3))
@@ -1512,8 +1515,8 @@ void UsageExit(BOOL ShowHelp)
 Martin, SciTech Software\n\n");
       
       fprintf(stderr,"Usage: qtree [-q] [-b] [-c <control.dat>] [-r <n>] \
-[-o fmt] [-s <x> <y>] [<file.pdb> [<file.mtv>]]\n");
-      fprintf(stderr,"       qtree [-h]\n\n");
+[-f fmt] [-s <x> <y>] [<file.pdb> [<file.mtv>]]\n");
+      fprintf(stderr,"       qtree [--help]\n\n");
       fprintf(stderr,"       -q Operate quietly\n");
       fprintf(stderr,"       -b Interpret occupancy as radius for ball \
 & stick\n");
@@ -1523,12 +1526,13 @@ Martin, SciTech Software\n\n");
       fprintf(stderr,"       -s Specify screen size (%d %d)\n",
              XSIZE,YSIZE);
       fprintf(stderr,"       -h Enter help utility\n");
-      fprintf(stderr,"       -o Specify output format (mtv|png)\n\n");
-      fprintf(stderr,"       Default output is in MTV raytracer \
+      fprintf(stderr,"       -f Specify output format (mtv|png)\n");
+      fprintf(stderr,"          Default output is in MTV raytracer \
 format\n\n");
       fprintf(stderr,"       Render a space filling picture of a PDB \
-file\n");
-      fprintf(stderr,"       Enter qtree -h to enter the help program\n");
+file\n\n");
+      fprintf(stderr,"       Enter 'qtree --help' to enter the help \
+program\n\n");
    }
    exit(0);
 }

@@ -40,8 +40,8 @@ bioplib/chindex.o bioplib/CopyPDB.o bioplib/OpenStdFiles.o
 
 all : $(EXE)
 
-qtree :  $(OFILES) $(LFILES)
-	$(CC) $(COPT) -o $@ $(OFILES) $(LFILES) $(LIBS) $(GLIBS) $(LIBS)
+qtree :  $(OFILES) $(GOFILES) $(LFILES)
+	$(CC) $(COPT) -o $@ $(OFILES) $(GOFILES) $(LFILES) $(LIBS) $(GLIBS) $(LIBS)
 
 worms :  worms.o $(UFILES)
 	$(CC) $(COPT) -o $@ worms.o $(UFILES) $(LIBS)
