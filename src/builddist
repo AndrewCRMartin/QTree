@@ -1,11 +1,11 @@
-s!/bin/sh
+#!/bin/sh
 # Short script to copy the required files from bioplib for creation
 # of a distribution version of QTree
 # V1.0  21.12.94 By: ACRM
 # V1.1  18.06.96 Added bioplib/ZonePDB.c
 
 BIOP=${HOME}/git/bioplib/src
-QTREE=QTreeV2.4
+QTREE=QTreeV2.5
 QTBIOP=$QTREE/bioplib
 QTEXTRAS=$QTREE/extras
 
@@ -31,98 +31,88 @@ then
    echo "Got extras sub-directory"
 else
    echo "Creating extras sub-directory"
-   mkdir =p $QTEXTRAS
+   mkdir -p $QTEXTRAS
 fi
 
 # Copy bioplib files into directory
-cp ${BIOP}/macros.h     $QTBIOP
-cp ${BIOP}/MathType.h   $QTBIOP
-cp ${BIOP}/SysDefs.h    $QTBIOP
-cp ${BIOP}/pdb.h        $QTBIOP
-cp ${BIOP}/help.h       $QTBIOP
-cp ${BIOP}/parse.h      $QTBIOP
-cp ${BIOP}/general.h    $QTBIOP
-cp ${BIOP}/matrix.h     $QTBIOP
-cp ${BIOP}/WindIO.h     $QTBIOP
-cp ${BIOP}/fsscanf.h    $QTBIOP
-cp ${BIOP}/CursWind.h   $QTBIOP
-cp ${BIOP}/angle.h      $QTBIOP
-cp ${BIOP}/array.h      $QTBIOP
-cp ${BIOP}/RotPDB.c     $QTBIOP
-cp ${BIOP}/ReadPDB.c    $QTBIOP
-cp ${BIOP}/WritePDB.c   $QTBIOP
-cp ${BIOP}/MatMult3_33.c $QTBIOP
-cp ${BIOP}/parse.c      $QTBIOP
-cp ${BIOP}/angle.c      $QTBIOP
-cp ${BIOP}/general.c    $QTBIOP
-cp ${BIOP}/fsscanf.c    $QTBIOP
-cp ${BIOP}/WindIO.c     $QTBIOP
-cp ${BIOP}/ModPDB.c     $QTBIOP
-cp ${BIOP}/ApMatPDB.c   $QTBIOP
-cp ${BIOP}/OrigPDB.c    $QTBIOP
-cp ${BIOP}/GetCGPDB.c   $QTBIOP
-cp ${BIOP}/ParseRes.c   $QTBIOP
-cp ${BIOP}/CalcPDB.c    $QTBIOP
-cp ${BIOP}/ZonePDB.c    $QTBIOP
-cp ${BIOP}/COPYING.DOC  $QTBIOP
-cp ${BIOP}/deprecated.h $QTBIOP
-cp ${BIOP}/hash.h       $QTBIOP
-cp ${BIOP}/port.h       $QTBIOP
-cp ${BIOP}/seq.h       $QTBIOP
-cp ${BIOP}/throne.c       $QTBIOP
-cp ${BIOP}/GetWord.c       $QTBIOP
-cp ${BIOP}/array2.c       $QTBIOP
-cp ${BIOP}/stringcat.c       $QTBIOP
-cp ${BIOP}/BuildConect.c       $QTBIOP
-cp ${BIOP}/IndexPDB.c       $QTBIOP
-cp ${BIOP}/FindNextResidue.c       $QTBIOP
-cp ${BIOP}/FindResidue.c       $QTBIOP
-cp ${BIOP}/padterm.c      $QTBIOP
-cp ${BIOP}/KillLeadSpaces.c       $QTBIOP
-cp ${BIOP}/StringToUpper.c       $QTBIOP
-cp ${BIOP}/GetPDBChainLabels.c       $QTBIOP
-cp ${BIOP}/strcatalloc.c       $QTBIOP
-cp ${BIOP}/StoreString.c $QTBIOP
-cp ${BIOP}/hash.c $QTBIOP
-cp ${BIOP}/MathUtil.h $QTBIOP
-cp ${BIOP}/prime.c $QTBIOP
-cp ${BIOP}/stringutil.c $QTBIOP
-cp ${BIOP}/PDBHeaderInfo.c $QTBIOP
-cp ${BIOP}/OpenFile.c       $QTBIOP
-cp ${BIOP}/chindex.c       $QTBIOP
-cp ${BIOP}/FreeStringList.c       $QTBIOP
+cp ${BIOP}/macros.h             $QTBIOP
+cp ${BIOP}/MathType.h           $QTBIOP
+cp ${BIOP}/SysDefs.h            $QTBIOP
+cp ${BIOP}/pdb.h                $QTBIOP
+cp ${BIOP}/help.h               $QTBIOP
+cp ${BIOP}/parse.h              $QTBIOP
+cp ${BIOP}/general.h            $QTBIOP
+cp ${BIOP}/matrix.h             $QTBIOP
+cp ${BIOP}/WindIO.h             $QTBIOP
+cp ${BIOP}/fsscanf.h            $QTBIOP
+cp ${BIOP}/angle.h              $QTBIOP
+cp ${BIOP}/array.h              $QTBIOP
+cp ${BIOP}/RotPDB.c             $QTBIOP
+cp ${BIOP}/ReadPDB.c            $QTBIOP
+cp ${BIOP}/WritePDB.c           $QTBIOP
+cp ${BIOP}/MatMult3_33.c        $QTBIOP
+cp ${BIOP}/parse.c              $QTBIOP
+cp ${BIOP}/angle.c              $QTBIOP
+cp ${BIOP}/fsscanf.c            $QTBIOP
+cp ${BIOP}/WindIO.c             $QTBIOP
+cp ${BIOP}/ApMatPDB.c           $QTBIOP
+cp ${BIOP}/GetCGPDB.c           $QTBIOP
+cp ${BIOP}/ParseRes.c           $QTBIOP
+cp ${BIOP}/../COPYING.DOC       $QTBIOP
+cp ${BIOP}/deprecated.h         $QTBIOP
+cp ${BIOP}/hash.h               $QTBIOP
+cp ${BIOP}/port.h               $QTBIOP
+cp ${BIOP}/seq.h                $QTBIOP
+cp ${BIOP}/throne.c             $QTBIOP
+cp ${BIOP}/GetWord.c            $QTBIOP
+cp ${BIOP}/array2.c             $QTBIOP
+cp ${BIOP}/stringcat.c          $QTBIOP
+cp ${BIOP}/BuildConect.c        $QTBIOP
+cp ${BIOP}/IndexPDB.c           $QTBIOP
+cp ${BIOP}/FindNextResidue.c    $QTBIOP
+cp ${BIOP}/FindResidue.c        $QTBIOP
+cp ${BIOP}/padterm.c            $QTBIOP
+cp ${BIOP}/KillLeadSpaces.c     $QTBIOP
+cp ${BIOP}/StringToUpper.c      $QTBIOP
+cp ${BIOP}/GetPDBChainLabels.c  $QTBIOP
+cp ${BIOP}/strcatalloc.c        $QTBIOP
+cp ${BIOP}/StoreString.c        $QTBIOP
+cp ${BIOP}/hash.c               $QTBIOP
+cp ${BIOP}/MathUtil.h           $QTBIOP
+cp ${BIOP}/prime.c              $QTBIOP
+cp ${BIOP}/stringutil.c         $QTBIOP
+cp ${BIOP}/PDBHeaderInfo.c      $QTBIOP
+cp ${BIOP}/OpenFile.c           $QTBIOP
+cp ${BIOP}/chindex.c            $QTBIOP
+cp ${BIOP}/FreeStringList.c     $QTBIOP
 cp ${BIOP}/TranslatePDB.c       $QTBIOP
-cp ${BIOP}/OriginPDB.c       $QTBIOP
-cp ${BIOP}/padterm.c       $QTBIOP
-cp ${BIOP}/ParseRes.c       $QTBIOP
+cp ${BIOP}/OriginPDB.c          $QTBIOP
+cp ${BIOP}/padterm.c            $QTBIOP
+cp ${BIOP}/ParseRes.c           $QTBIOP
 cp ${BIOP}/CreateRotMat.c       $QTBIOP
-cp ${BIOP}/help.c       $QTBIOP
-cp ${BIOP}/InPDBZone.c       $QTBIOP
-cp ${BIOP}/CopyPDB.c      $QTBIOP
-cp ${BIOP}/OpenStdFiles.c      $QTBIOP
+cp ${BIOP}/help.c               $QTBIOP
+cp ${BIOP}/InPDBZone.c          $QTBIOP
+cp ${BIOP}/CopyPDB.c            $QTBIOP
+cp ${BIOP}/OpenStdFiles.c       $QTBIOP
 
-# Copy in the extras files
-cp extras/ColourGraphics.c $QTEXTRAS
-cp extras/GreyGraphics.c   $QTEXTRAS
-cp extras/mtvham.c         $QTEXTRAS
-cp extras/ReadMTV.c        $QTEXTRAS
+# Copy in the Amiga files
+cp Amiga/*                      $QTEXTRAS
 
 # Copy source code into directory
-cp *.c *.h *.p          $QTREE
+cp *.c *.h *.p                  $QTREE
 
 # Copy documentation into directory
-cp *.hlp                $QTREE
-cp 00Read.Me            $QTREE
-cp COPYING.DOC          $QTREE
+cp *.hlp                        $QTREE
+cp ../README.md                 $QTREE
+cp COPYING.DOC                  $QTREE
 
 # Copy distribution specials into directory
-cp ./distspecial/makefile       $QTREE
+cp ./distspecial/Makefile       $QTREE
 cp ./distspecial/restype.dat    $QTREE
 cp ./distspecial/00READ.ME      $QTBIOP
 
 # Tar up the distribution directory
-tar -cvf ${QTREE}.tar $QTREE
-gzip ${QTREE}.tar
+tar -zcvf ${QTREE}.tar.gz $QTREE
 
 # and finally delete the directory
 /bin/rm -rf $QTREE
