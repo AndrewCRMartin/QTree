@@ -1,8 +1,7 @@
+```
 
 
-
-
-                              QTree V2.5
+                              QTree V3.0
                               ==========
 
                         Prof. Andrew C.R. Martin
@@ -59,7 +58,7 @@
    without prior permission from the author.
                                                 
    =====================================================================
-
+```
 
 
 
